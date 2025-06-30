@@ -302,4 +302,3 @@ data class ClimateInfo(
     val date: String,
 )
 
-val linkApi = "https://api.open-meteo.com/v1/forecast?latitude=-23.78&longitude=-46.69&hourly=temperature_2m,precipitation&current=temperature_2m,rain,wind_speed_10m,relative_humidity_2m&forecast_days=2"
