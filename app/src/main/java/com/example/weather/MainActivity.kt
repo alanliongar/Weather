@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,8 +72,8 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
                 modifier = modifier
                     .align(Alignment.CenterVertically)
                     .size(28.dp),
-                painter = painterResource(R.drawable.ic_launcher_foreground),
-                contentDescription = "detail icon",
+                imageVector = Icons.Filled.GridView,
+                contentDescription = "Grid view"
             )
         }
         //line of temperature, status and image
@@ -96,13 +97,13 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
                     fontSize = 14.sp
                 )
             }
-            Icon(
-                modifier = modifier
-                    .weight(1f)
-                    .size(90.dp),
-                painter = painterResource(R.drawable.ic_launcher_foreground),
-                contentDescription = "Weather icon"
+            Text(
+                text = getEmoji(weatherStatus = "Thunderstorm"),
+                fontSize = 90.sp,
+                modifier = modifier,
+                textAlign = TextAlign.Center
             )
+
         }
         Row(
             modifier = modifier
@@ -110,12 +111,11 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
                 .padding(10.dp)
         ) {
             Column(modifier = modifier.weight(1f)) {
-                Icon(
-                    modifier = modifier
-                        .size(28.dp)
-                        .align(Alignment.CenterHorizontally),
-                    painter = painterResource(R.drawable.ic_launcher_foreground),
-                    contentDescription = "wind icon"
+                Text(
+                    text = getEmoji(weatherStatus = "Wind"),
+                    fontSize = 28.sp,
+                    modifier = modifier.align(Alignment.CenterHorizontally),
+                    textAlign = TextAlign.Center
                 )
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
@@ -127,12 +127,11 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
                 )
             }
             Column(modifier = modifier.weight(1f)) {
-                Icon(
-                    modifier = modifier
-                        .size(28.dp)
-                        .align(Alignment.CenterHorizontally),
-                    painter = painterResource(R.drawable.ic_launcher_foreground),
-                    contentDescription = "humidity icon"
+                Text(
+                    text = getEmoji(weatherStatus = "Humidity"),
+                    fontSize = 28.sp,
+                    modifier = modifier.align(Alignment.CenterHorizontally),
+                    textAlign = TextAlign.Center
                 )
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
@@ -144,12 +143,11 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
                 )
             }
             Column(modifier = modifier.weight(1f)) {
-                Icon(
-                    modifier = modifier
-                        .size(28.dp)
-                        .align(Alignment.CenterHorizontally),
-                    painter = painterResource(R.drawable.ic_launcher_foreground),
-                    contentDescription = "rain icon"
+                Text(
+                    text = getEmoji(weatherStatus = "Rain"),
+                    fontSize = 28.sp,
+                    modifier = modifier.align(Alignment.CenterHorizontally),
+                    textAlign = TextAlign.Center
                 )
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
@@ -189,18 +187,17 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
                         text = "10 am",
                         fontSize = 14.sp
                     )
-                    Icon(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .align(Alignment.CenterHorizontally)
-                            .weight(1f),
-                        painter = painterResource(R.drawable.ic_launcher_foreground),
-                        contentDescription = "weather icon",
+                    Text(
+                        text = "☀",
+                        fontSize = 28.sp, // ou ajuste conforme quiser
+                        modifier = modifier.align(Alignment.CenterHorizontally),
+                        textAlign = TextAlign.Center
                     )
                     Text(
                         modifier = modifier
                             .align(Alignment.CenterHorizontally)
-                            .weight(1f),
+                            .weight(1f)
+                            .padding(top = 8.dp),
                         text = "16°",
                         fontSize = 14.sp
                     )
@@ -214,22 +211,21 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
                             .align(Alignment.CenterHorizontally)
                             .weight(1f)
                             .padding(top = 8.dp),
-                        text = "10 am",
+                        text = "11 am",
                         fontSize = 14.sp
                     )
-                    Icon(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .align(Alignment.CenterHorizontally)
-                            .weight(1f),
-                        painter = painterResource(R.drawable.ic_launcher_foreground),
-                        contentDescription = "weather icon",
+                    Text(
+                        text = getEmoji("Heavy rain"),
+                        fontSize = 28.sp, // ou ajuste conforme quiser
+                        modifier = modifier.align(Alignment.CenterHorizontally),
+                        textAlign = TextAlign.Center
                     )
                     Text(
                         modifier = modifier
                             .align(Alignment.CenterHorizontally)
-                            .weight(1f),
-                        text = "16°",
+                            .weight(1f)
+                            .padding(top = 8.dp),
+                        text = "18°",
                         fontSize = 14.sp
                     )
                 }
@@ -237,7 +233,10 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
         }
 
         Image(
-            modifier = modifier.fillMaxWidth().height(200.dp).padding(16.dp),
+            modifier = modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(16.dp),
             contentScale = ContentScale.Crop,
             painter = painterResource(R.drawable.ic_launcher_background),
             contentDescription = "map"
@@ -272,6 +271,27 @@ val stuttgart: ClimateInfo =
         "12 September, Sunday"
     )
 
+private fun getEmoji(weatherStatus: String): String {
+    if (weatherStatus == "Thunderstorm")
+        return "\uD83C\uDF29"
+    else if (weatherStatus == "Humidity")
+        return "\uD83D\uDCA6"
+    else if (weatherStatus == "Wind")
+        return "\uD83D\uDCA8"
+    else if (weatherStatus == "Rain")
+        return "☔"
+    else if (weatherStatus == "Heavy rain")
+        return "\uD83C\uDF27\uFE0F"
+    else if (weatherStatus == "Sun")
+        return "☀"
+    else if (weatherStatus == "Cloudy")
+        return "\uD83C\uDF25"
+    else if (weatherStatus == "Lightning")
+        return "⚡"
+    else
+        return ""
+}
+
 data class ClimateInfo(
     val city: String,
     val weatherStatus: String,
@@ -281,3 +301,5 @@ data class ClimateInfo(
     val rain: Float,
     val date: String,
 )
+
+val linkApi = "https://api.open-meteo.com/v1/forecast?latitude=-23.78&longitude=-46.69&hourly=temperature_2m,precipitation&current=temperature_2m,rain,wind_speed_10m,relative_humidity_2m&forecast_days=2"
