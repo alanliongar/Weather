@@ -96,12 +96,12 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
                     fontSize = 56.sp
                 )
                 Text(
-                    text = cityClimateInfo.weatherStatus,
+                    text = getWeatherDescription(cityClimateInfo.weatherCode), //Colocar weatherCode aqui!
                     fontSize = 14.sp
                 )
             }
             Text(
-                text = getEmoji(weatherStatus = "Thunderstorm"),
+                text = getWeatherEmoji(99),
                 fontSize = 90.sp,
                 modifier = modifier,
                 textAlign = TextAlign.Center
@@ -115,7 +115,7 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
         ) {
             Column(modifier = modifier.weight(1f)) {
                 Text(
-                    text = getEmoji(weatherStatus = "Wind"),
+                    text = "\uD83D\uDCA8",
                     fontSize = 28.sp,
                     modifier = modifier.align(Alignment.CenterHorizontally),
                     textAlign = TextAlign.Center
@@ -131,7 +131,7 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
             }
             Column(modifier = modifier.weight(1f)) {
                 Text(
-                    text = getEmoji(weatherStatus = "Humidity"),
+                    text = "\uD83D\uDCA6",
                     fontSize = 28.sp,
                     modifier = modifier.align(Alignment.CenterHorizontally),
                     textAlign = TextAlign.Center
@@ -147,7 +147,7 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
             }
             Column(modifier = modifier.weight(1f)) {
                 Text(
-                    text = getEmoji(weatherStatus = "Rain"),
+                    text = "☔",
                     fontSize = 28.sp,
                     modifier = modifier.align(Alignment.CenterHorizontally),
                     textAlign = TextAlign.Center
@@ -191,7 +191,7 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
                         fontSize = 14.sp
                     )
                     Text(
-                        text = "☀",
+                        text = getWeatherEmoji(0),
                         fontSize = 28.sp, // ou ajuste conforme quiser
                         modifier = modifier.align(Alignment.CenterHorizontally),
                         textAlign = TextAlign.Center
@@ -218,7 +218,7 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
                         fontSize = 14.sp
                     )
                     Text(
-                        text = getEmoji("Heavy rain"),
+                        text = getWeatherEmoji(65),
                         fontSize = 28.sp, // ou ajuste conforme quiser
                         modifier = modifier.align(Alignment.CenterHorizontally),
                         textAlign = TextAlign.Center
@@ -266,7 +266,7 @@ fun GreetingPreview() {
 val stuttgart: ClimateInfo =
     ClimateInfo(
         "Stuttgart",
-        "Thunderstorm",
+        99,
         18,
         10,
         .98f,
@@ -274,34 +274,52 @@ val stuttgart: ClimateInfo =
         "12 September, Sunday"
     )
 
-private fun getEmoji(weatherStatus: String): String {
-    if (weatherStatus == "Thunderstorm")
-        return "\uD83C\uDF29"
-    else if (weatherStatus == "Humidity")
-        return "\uD83D\uDCA6"
-    else if (weatherStatus == "Wind")
-        return "\uD83D\uDCA8"
-    else if (weatherStatus == "Rain")
-        return "☔"
-    else if (weatherStatus == "Heavy rain")
-        return "\uD83C\uDF27\uFE0F"
-    else if (weatherStatus == "Sun")
-        return "☀"
-    else if (weatherStatus == "Cloudy")
-        return "\uD83C\uDF25"
-    else if (weatherStatus == "Lightning")
-        return "⚡"
-    else
-        return ""
+private fun getWeatherDescription(weatherCode: Int): String {
+    return when (weatherCode) {
+        0 -> "Clear"
+        1, 2, 3 -> "Cloudy"
+        45, 48 -> "Fog"
+        51, 53, 55 -> "Drizzle"
+        56, 57 -> "Icy"
+        61, 63, 65 -> "Rain"
+        66, 67 -> "Icy"
+        71, 73, 75, 77, 85, 86 -> "Snow"
+        80, 81, 82 -> "Showers"
+        95 -> "Thunder"
+        96, 99 -> "Thunderstorm"
+        else -> "Unknown"
+    }
+}
+
+private fun getWeatherEmoji(weatherCode: Int): String {
+    return when (weatherCode) {
+        0 -> "☀" // Clear sky
+        1, 2, 3 -> "\uD83C\uDF25" // Cloudy: Mainly clear, partly cloudy, overcast
+        45, 48 -> "\uD83D\uDCA6" // Fog
+        51, 53, 55 -> "\uD83C\uDF27\uFE0F" // Drizzle
+        56, 57 -> "\u2744\uD83D\uDCA6" // Freezing Drizzle
+        61, 63 -> "☔" // Rain: slight and moderate
+        65 -> "\uD83C\uDF27\uFE0F" // Rain: heavy
+        66, 67 -> "\u2744☔" // Freezing Rain
+        71, 73 -> "\uD83C\uDF28" // Snow: slight, moderate
+        75 -> "\u2744" // Snow: heavy
+        77 -> "\u2744" // Snow grains
+        80, 81 -> "☔" // Rain showers: slight, moderate
+        82 -> "\uD83C\uDF27\uFE0F" // Rain showers: violent
+        85 -> "\u2744" // Snow showers slight
+        86 -> "\uD83C\uDF28" // Snow showers heavy
+        95 -> "\uD83C\uDF29" // Thunderstorm: slight/moderate
+        96, 99 -> "\uD83C\uDF29⚡" // Thunderstorm + hail
+        else -> "" // Unknown
+    }
 }
 
 data class ClimateInfo(
     val city: String,
-    val weatherStatus: String,
+    val weatherCode: Int,
     val temperature: Int,
     val windSpeed: Int,
     val humidity: Float,
     val rain: Float,
     val date: String,
 )
-
