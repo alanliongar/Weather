@@ -36,6 +36,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             WeatherTheme {
+                val apiService = WeatherRetrofitClient.retrofitInstance.create(WeatherTodayService::class.java)
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
                         name = "Android",
@@ -46,6 +48,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 
 @Composable
 fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
