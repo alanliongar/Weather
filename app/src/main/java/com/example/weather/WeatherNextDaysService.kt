@@ -15,4 +15,4 @@ interface WeatherNextDaysService {
         @Query("daily") daily: String = "weather_code,temperature_2m_max,temperature_2m_min",
         @Query("current") current: String = "temperature_2m,relative_humidity_2m,rain,wind_speed_10m,weather_code",
     ): Response<WeatherTodayDto>
-}
+}//
