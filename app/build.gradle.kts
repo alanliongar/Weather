@@ -11,7 +11,7 @@ android {
     namespace = "com.example.weather"
     compileSdk = 35
 
-    buildFeatures{
+    buildFeatures {
         buildConfig = true
     }
 
@@ -69,6 +69,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("junit:junit:4.12")
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.4")
 
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.androidx.core.ktx)
