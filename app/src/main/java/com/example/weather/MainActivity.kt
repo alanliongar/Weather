@@ -1,6 +1,7 @@
 package com.example.weather
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,9 +18,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -29,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weather.ui.theme.WeatherTheme
+import retrofit2.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,19 +44,72 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             WeatherTheme {
-                val apiService = WeatherRetrofitClient.retrofitInstance.create(WeatherTodayService::class.java)
+                var todayWeather by remember { mutableStateOf<WeatherTodayDTO?>(null) }
+                val weatherTodayService =
+                    WeatherRetrofitClient.retrofitInstance.create(WeatherTodayService::class.java)
+                val callTodayWeather = weatherTodayService.getTodayWeather(-23.78f, -46.69f)
+                callTodayWeather.enqueue(object : Callback<WeatherTodayDTO> {
+                    override fun onResponse(
+                        call: Call<WeatherTodayDTO>,
+                        response: Response<WeatherTodayDTO>
+                    ) {
+                        if (response.isSuccessful) {
+                            val weather = response.body()
+                            if (weather != null) {
+                                todayWeather = weather
+                            } else {
+                                Log.d("MainActivity", "Request Error :: Empty response")
+                            }
+                        } else {
+                            Log.d("MainActivity", "Request Error :: ${response.errorBody()}")
+                        }
+                    }
 
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                    override fun onFailure(call: Call<WeatherTodayDTO>, t: Throwable) {
+                        Log.d("MainActivity", "Network Error :: ${t.message}")
+                    }
+                })
+
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val climateInfo = ClimateInfo(
+                        "Stuttgart",
+                        todayWeather?.current?.weather ?: 0,
+                        todayWeather?.current?.temperature ?: 0f,
+                        todayWeather?.current?.wind ?: 0f,
+                        todayWeather?.current?.humidity ?: 0,
+                        todayWeather?.current?.rain ?: 0f,
+                        todayWeather?.current?.time ?: "Error"
                     )
+                    Climate(climateInfo)
                 }
             }
         }
     }
 }
 
+val stuttgart: ClimateInfo =
+    ClimateInfo(
+        "Stuttgart",
+        99,
+        18f,
+        10f,
+        98,
+        1.0f,
+        "12 September, Sunday"
+    )
+
+data class ClimateInfo(
+    val city: String,
+    val weatherCode: Int,
+    val temperature: Float,
+    val windSpeed: Float,
+    val humidity: Int,
+    val rain: Float,
+    val date: String,
+)
 
 @Composable
 fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
@@ -263,17 +324,6 @@ fun GreetingPreview() {
     }
 }
 
-val stuttgart: ClimateInfo =
-    ClimateInfo(
-        "Stuttgart",
-        99,
-        18,
-        10,
-        .98f,
-        1.0f,
-        "12 September, Sunday"
-    )
-
 private fun getWeatherDescription(weatherCode: Int): String {
     return when (weatherCode) {
         0 -> "Clear"
@@ -313,13 +363,3 @@ private fun getWeatherEmoji(weatherCode: Int): String {
         else -> "" // Unknown
     }
 }
-
-data class ClimateInfo(
-    val city: String,
-    val weatherCode: Int,
-    val temperature: Int,
-    val windSpeed: Int,
-    val humidity: Float,
-    val rain: Float,
-    val date: String,
-)

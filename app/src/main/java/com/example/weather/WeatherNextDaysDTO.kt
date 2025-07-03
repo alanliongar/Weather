@@ -2,7 +2,7 @@ package com.example.weather
 
 import com.google.gson.annotations.SerializedName
 
-data class WeatherNextDaysDto(
+data class WeatherNextDaysDTO(
     val current: Current,
     val daily: Daily
 ) {
@@ -12,13 +12,14 @@ data class WeatherNextDaysDto(
         @SerializedName("relative_humidity_2m") val humidity: Int,
         @SerializedName("rain") val rain: Float,
         @SerializedName("wind_speed_10m") val windSpeed: Float,
-        @SerializedName("weather_Code") val weatherCode: Int,
+        @SerializedName("weather_code") val weatherCode: Int,
     )
 
     data class Daily(
         @SerializedName("time") val time: List<String>,
-        @SerializedName("weather_Code") val weatherCode: List<Int>,
+        @SerializedName("weather_code") val weatherCode: List<Int>,
         @SerializedName("temperature_2m_min") val temperatureMin: List<Float>,
         @SerializedName("temperature_2m_max") val temperatureMax: List<Float>
     )
 }
+

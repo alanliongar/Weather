@@ -3,7 +3,7 @@ package com.example.weather
 import com.google.gson.annotations.SerializedName
 
 
-data class WeatherTodayDto(
+data class WeatherTodayDTO(
     val current: Current,
     val hourly: Hourly,
 ) {
@@ -13,6 +13,7 @@ data class WeatherTodayDto(
         @SerializedName("wind_speed_10m") val wind: Float,
         @SerializedName("weather_code") val weather: Int,
         @SerializedName("rain") val rain: Float,
+        @SerializedName("time") val time: String,
     )
 
     data class Hourly(
