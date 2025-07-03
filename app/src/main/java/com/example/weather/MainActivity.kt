@@ -41,7 +41,7 @@ import retrofit2.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        //enableEdgeToEdge()
         setContent {
             WeatherTheme {
                 var todayWeather by remember { mutableStateOf<WeatherTodayDTO?>(null) }
@@ -199,7 +199,7 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
                 )
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = String.format("%.0f", cityClimateInfo.humidity * 100).toString() + "%"
+                    text = cityClimateInfo.humidity.toString() + "%"
                 )
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
@@ -215,7 +215,7 @@ fun Climate(cityClimateInfo: ClimateInfo, modifier: Modifier = Modifier) {
                 )
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = String.format("%.0f", cityClimateInfo.rain * 100).toString() + "%"
+                    text = String.format("%.0f", cityClimateInfo.rain * 100) + "%"
                 )
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
