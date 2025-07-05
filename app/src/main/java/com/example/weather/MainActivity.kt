@@ -4,7 +4,8 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,24 +14,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,25 +37,35 @@ import androidx.compose.ui.unit.sp
 import com.example.weather.ui.theme.WeatherTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.maplibre.android.MapLibre
+import org.maplibre.android.WellKnownTileServer
 import retrofit2.*
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.format.DateTimeFormatter
 import java.util.Locale
+
+private const val apiKey = BuildConfig.API_KEY
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //enableEdgeToEdge()
+        enableEdgeToEdge()
+        MapLibre.getInstance(
+            this,
+            apiKey,
+            WellKnownTileServer.MapLibre
+        )
         setContent {
             WeatherTheme {
+                var selectedDay by remember { mutableStateOf(0) }
                 var todayWeather by remember { mutableStateOf<WeatherTodayDTO?>(null) }
+                var newHourlyMap by remember {
+                    mutableStateOf<List<HourlyWeather>>(emptyList())
+                }
                 val weatherTodayService =
                     WeatherRetrofitClient.retrofitInstance.create(WeatherTodayService::class.java)
                 val callTodayWeather = weatherTodayService.getTodayWeather(-23.78f, -46.69f)
                 callTodayWeather.enqueue(object : Callback<WeatherTodayDTO> {
                     override fun onResponse(
-                        call: Call<WeatherTodayDTO>,
-                        response: Response<WeatherTodayDTO>
+                        call: Call<WeatherTodayDTO>, response: Response<WeatherTodayDTO>
                     ) {
                         if (response.isSuccessful) {
                             val weather = response.body()
@@ -75,48 +83,106 @@ class MainActivity : ComponentActivity() {
                         Log.d("MainActivity", "Network Error :: ${t.message}")
                     }
                 })
-
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Spacer(modifier = Modifier.size(20.dp))
+                LaunchedEffect(selectedDay, todayWeather) {
                     if (todayWeather != null) {
-                        val climateInfo = ClimateInfo(
-                            "Sao Paulo",
-                            todayWeather?.current?.weather ?: 0,
-                            todayWeather?.current?.temperature ?: 0f,
-                            todayWeather?.current?.wind ?: 0f,
-                            todayWeather?.current?.humidity ?: 0,
-                            todayWeather?.current?.rain ?: 0f,
-                            todayWeather?.current?.time ?: "Error"
-                        )
-                        val hourlyMap: List<HourlyWeather>
-                        runBlocking {
-                            hourlyMap =
-                                convertWeatherTodayDTOToListHourlyWeather(weatherTodayDTO = todayWeather!!)
-                            delay(1000)
-                        }
-                        Climate(climateInfo, weatherTodayDTO = hourlyMap, modifier = Modifier)
-                    } else {
-                        Text("Error")
+                        newHourlyMap =
+                            convertWeatherTodayDTOToListHourlyWeather(todayWeather!!, selectedDay)
                     }
+                }
+                Surface(
+                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
+                ) {
+                    Column() {
+                        Spacer(modifier = Modifier.size(28.dp))
+                        if (todayWeather != null) {
+                            val climateInfo = ClimateInfo(
+                                "Sao Paulo",
+                                todayWeather?.current?.weather ?: 0,
+                                todayWeather?.current?.temperature ?: 0f,
+                                todayWeather?.current?.wind ?: 0f,
+                                todayWeather?.current?.humidity ?: 0,
+                                todayWeather?.current?.rain ?: 0f,
+                                todayWeather?.current?.time ?: "Error"
+                            )
 
+                            runBlocking {
+                                newHourlyMap =
+                                    convertWeatherTodayDTOToListHourlyWeather(
+                                        weatherTodayDTO = todayWeather!!,
+                                        days = selectedDay
+                                    )
+                                delay(1000)
+                            }
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                item {
+                                    Climate(
+                                        climateInfo,
+                                        weatherTodayDTO = newHourlyMap,
+                                        modifier = Modifier
+                                    ) { days ->
+                                        println(days.toString())
+                                        if (days < 2) {
+                                            selectedDay = days
+                                        } else {
+                                            //Aqui é o caso que devemos navegar pra próxima tela, mostrando a previsão (range) dos próximos 7 dias.
+                                        }
+                                    }
+                                }
+
+                                item {
+                                    MapLibreMapView(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(360.dp)
+                                            .padding(16.dp),
+                                        apiKey = apiKey
+                                    )
+                                }
+                            }
+                        } else {
+                            Text("Loading....")
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-suspend fun convertWeatherTodayDTOToListHourlyWeather(weatherTodayDTO: WeatherTodayDTO): List<HourlyWeather> {
-    val hourlyMap: List<HourlyWeather> =
-        weatherTodayDTO.hourly.time.indices.map { index ->
-            HourlyWeather(
-                time = weatherTodayDTO.hourly.time[index],
-                temperature = weatherTodayDTO.hourly.temperature[index],
-                weatherCode = weatherTodayDTO.hourly.weatherCode[index]
-            )
+suspend fun convertWeatherTodayDTOToListHourlyWeather(
+    weatherTodayDTO: WeatherTodayDTO, days: Int = 0
+): List<HourlyWeather> {
+    val hourlyMap: List<HourlyWeather>
+    if (days == 0) {
+        hourlyMap = weatherTodayDTO.hourly.time.indices.mapNotNull { index ->
+            if (getHour(weatherTodayDTO.hourly.time[index]) >= getHour(weatherTodayDTO.current.time) && getDay(
+                    weatherTodayDTO.hourly.time[index]
+                ) == getDay(weatherTodayDTO.current.time) + days
+            ) {
+                HourlyWeather(
+                    time = weatherTodayDTO.hourly.time[index],
+                    temperature = weatherTodayDTO.hourly.temperature[index],
+                    weatherCode = weatherTodayDTO.hourly.weatherCode[index]
+                )
+            } else {
+                null
+            }
         }
+    } else {
+        hourlyMap = weatherTodayDTO.hourly.time.indices.mapNotNull { index ->
+            if (getDay(weatherTodayDTO.hourly.time[index]) == getDay(weatherTodayDTO.current.time) + days) {
+                HourlyWeather(
+                    time = weatherTodayDTO.hourly.time[index],
+                    temperature = weatherTodayDTO.hourly.temperature[index],
+                    weatherCode = weatherTodayDTO.hourly.weatherCode[index]
+                )
+            } else {
+                null
+            }
+        }
+    }
     return hourlyMap
 }
 
@@ -125,10 +191,9 @@ suspend fun convertWeatherTodayDTOToListHourlyWeather(weatherTodayDTO: WeatherTo
 fun Climate(
     cityClimateInfo: ClimateInfo,
     modifier: Modifier = Modifier,
-    weatherTodayDTO: List<HourlyWeather>
+    weatherTodayDTO: List<HourlyWeather>,
+    onClick: (Int) -> Unit
 ) {
-
-
     Column(modifier = modifier.padding(10.dp)) {
         Row(modifier = modifier.fillMaxWidth()) {
             Column(
@@ -137,26 +202,18 @@ fun Climate(
                     .align(Alignment.CenterVertically)
             ) {
                 Text(
-                    modifier = modifier
-                        .align(Alignment.Start),
-                    fontSize = 18.sp,
+                    modifier = modifier.align(Alignment.Start),
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.SemiBold,
                     text = cityClimateInfo.city
                 )
                 Text(
                     modifier = modifier.align(Alignment.Start),
-                    fontSize = 14.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     text = formatToFullDate(cityClimateInfo.date)
                 )
             }
-            Icon(
-                modifier = modifier
-                    .align(Alignment.CenterVertically)
-                    .size(28.dp),
-                imageVector = Icons.Filled.GridView,
-                contentDescription = "Grid view"
-            )
         }
         //line of temperature, status and image
         Row(
@@ -171,13 +228,11 @@ fun Climate(
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = cityClimateInfo.temperature.toString() + "°",
-                    fontSize = 56.sp
+                    text = cityClimateInfo.temperature.toString() + "°", fontSize = 60.sp
                 )
                 Text(
                     text = getWeatherDescription(cityClimateInfo.weatherCode), //Colocar weatherCode aqui!
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 18.sp, fontWeight = FontWeight.SemiBold
                 )
             }
             Text(
@@ -196,69 +251,91 @@ fun Climate(
             Column(modifier = modifier.weight(1f)) {
                 Text(
                     text = "\uD83D\uDCA8",
-                    fontSize = 28.sp,
+                    fontSize = 32.sp,
                     modifier = modifier.align(Alignment.CenterHorizontally),
                     textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.size(4.dp))
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = cityClimateInfo.windSpeed.toString() + " m/s"
+                    text = cityClimateInfo.windSpeed.toString() + " m/s",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp
                 )
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = "Wind"
+                    text = "Wind",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp
                 )
             }
             Column(modifier = modifier.weight(1f)) {
                 Text(
                     text = "\uD83D\uDCA6",
-                    fontSize = 28.sp,
+                    fontSize = 32.sp,
                     modifier = modifier.align(Alignment.CenterHorizontally),
                     textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.size(4.dp))
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = cityClimateInfo.humidity.toString() + "%"
+                    text = cityClimateInfo.humidity.toString() + "%",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp
                 )
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = "Humidity"
+                    text = "Humidity",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp
                 )
             }
             Column(modifier = modifier.weight(1f)) {
                 Text(
                     text = "☔",
-                    fontSize = 28.sp,
+                    fontSize = 32.sp,
                     modifier = modifier.align(Alignment.CenterHorizontally),
                     textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.size(4.dp))
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = String.format("%.0f", cityClimateInfo.rain * 100) + "%"
+                    text = String.format("%.0f", cityClimateInfo.rain * 100) + "%",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp
                 )
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = "Rain"
+                    text = "Rain",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp
                 )
             }
         }
+        Spacer(modifier = Modifier.size(14.dp))
         Row(modifier = modifier) {
             Text(
+                modifier = Modifier.clickable { onClick.invoke(0) },
                 text = "Today",
-                fontSize = 14.sp
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold
             )
-            Spacer(modifier = modifier.size(14.dp))
+            Spacer(modifier = modifier.size(18.dp))
             Text(
+                modifier = Modifier.clickable { onClick.invoke(1) },
                 text = "Tomorrow",
-                fontSize = 14.sp
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold
             )
-            Spacer(modifier = modifier.size(14.dp))
+            Spacer(modifier = modifier.size(18.dp))
             Text(
-                text = "Next 10 days",
-                fontSize = 14.sp
+                modifier = Modifier.clickable { onClick.invoke(7) },
+                text = "Next 7 days",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold
             )
         }
-
+        Spacer(modifier = Modifier.size(6.dp))
         LazyRow {
             items(weatherTodayDTO) { it ->
                 ClimateHourCard(
@@ -269,25 +346,12 @@ fun Climate(
                 )
             }
         }
-
-        Image(
-            modifier = modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .padding(16.dp),
-            contentScale = ContentScale.Crop,
-            painter = painterResource(R.drawable.ic_launcher_background),
-            contentDescription = "map"
-        )
     }
 }
 
 @Composable
 fun ClimateHourCard(
-    time: String,
-    weatherCode: Int,
-    temperature: Float,
-    modifier: Modifier = Modifier
+    time: String, weatherCode: Int, temperature: Float, modifier: Modifier = Modifier
 ) {
     Card(modifier = modifier.size(120.dp)) {
         Text(
@@ -295,7 +359,7 @@ fun ClimateHourCard(
                 .align(Alignment.CenterHorizontally)
                 .weight(1f)
                 .padding(top = 8.dp),
-            fontSize = 14.sp,
+            fontSize = 18.sp,
             textAlign = TextAlign.Center,
             text = formatToHourPeriod(time),
         )
@@ -303,7 +367,7 @@ fun ClimateHourCard(
             modifier = modifier
                 .align(Alignment.CenterHorizontally)
                 .weight(1f),
-            fontSize = 28.sp,
+            fontSize = 36.sp,
             textAlign = TextAlign.Center,
             text = getWeatherEmoji(weatherCode),
         )
@@ -313,7 +377,7 @@ fun ClimateHourCard(
                 .weight(1f)
                 .padding(top = 8.dp),
             text = String.format(Locale.US, "%.1f", temperature) + "°",
-            fontSize = 14.sp,
+            fontSize = 18.sp,
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.SemiBold
         )
@@ -326,16 +390,9 @@ data class HourlyWeather(
     val weatherCode: Int,
 )
 
-val stuttgart: ClimateInfo =
-    ClimateInfo(
-        "Stuttgart",
-        2,
-        18f,
-        10f,
-        98,
-        1.0f,
-        "2021-09-12T10:00"
-    )
+val stuttgart: ClimateInfo = ClimateInfo(
+    "Sao Paulo", 2, 18f, 10f, 98, 1.0f, "2021-09-12T10:00"
+)
 
 val weatherStuttgart = WeatherTodayDTO(
     hourly = WeatherTodayDTO.Hourly(
@@ -388,8 +445,7 @@ val weatherStuttgart = WeatherTodayDTO(
             "2025-07-04T21:00",
             "2025-07-04T22:00",
             "2025-07-04T23:00",
-        ),
-        temperature = listOf(
+        ), temperature = listOf(
             9.7f,
             9.6f,
             9.4f,
@@ -438,8 +494,7 @@ val weatherStuttgart = WeatherTodayDTO(
             11.7f,
             11.2f,
             10.7f
-        ),
-        weatherCode = listOf(
+        ), weatherCode = listOf(
             3,
             51,
             3,
@@ -489,8 +544,7 @@ val weatherStuttgart = WeatherTodayDTO(
             2,
             2
         )
-    ),
-    current = WeatherTodayDTO.Current(
+    ), current = WeatherTodayDTO.Current(
         temperature = 18f,
         humidity = 98,
         wind = 10f,
@@ -510,38 +564,7 @@ data class ClimateInfo(
     val date: String,
 )
 
-@Preview(showBackground = true)
-@Composable
-fun ClimatePreview() {
-    WeatherTheme {
-        var hourlyWeather: List<HourlyWeather>
-        runBlocking {
-            hourlyWeather = convertWeatherTodayDTOToListHourlyWeather(
-                weatherStuttgart
-            )
-            delay(500)
-        }
-
-        Climate(
-            stuttgart, weatherTodayDTO = hourlyWeather
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ClimateHourCardPreview(modifier: Modifier = Modifier) {
-    WeatherTheme {
-        ClimateHourCard(
-            modifier = modifier.size(120.dp),
-            time = weatherStuttgart.current.time,
-            weatherCode = weatherStuttgart.current.weather,
-            temperature = 16f
-        )
-    }
-}
-
-private fun getWeatherDescription(weatherCode: Int): String {
+fun getWeatherDescription(weatherCode: Int): String {
     return when (weatherCode) {
         0 -> "Clear"
         1, 2, 3 -> "Cloudy"
@@ -581,14 +604,35 @@ private fun getWeatherEmoji(weatherCode: Int): String {
     }
 }
 
-fun formatToHourPeriod(isoDateTime: String): String {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
-    val dateTime = LocalDateTime.parse(isoDateTime, formatter)
-    return dateTime.format(DateTimeFormatter.ofPattern("hh a", Locale.ENGLISH)).lowercase()
+@Preview(showBackground = true)
+@Composable
+fun ClimatePreview() {
+    WeatherTheme {
+        var hourlyWeather: List<HourlyWeather>
+        runBlocking {
+            hourlyWeather = convertWeatherTodayDTOToListHourlyWeather(
+                weatherStuttgart
+            )
+            delay(500)
+        }
+
+        Climate(
+            stuttgart, weatherTodayDTO = hourlyWeather
+        ) { it ->
+            println(it)
+        }
+    }
 }
 
-fun formatToFullDate(isoDateTime: String): String {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
-    val dateTime = LocalDateTime.parse(isoDateTime, formatter)
-    return dateTime.format(DateTimeFormatter.ofPattern("dd MMMM, EEEE", Locale.ENGLISH))
+@Preview(showBackground = true)
+@Composable
+fun ClimateHourCardPreview(modifier: Modifier = Modifier) {
+    WeatherTheme {
+        ClimateHourCard(
+            modifier = modifier.size(120.dp),
+            time = weatherStuttgart.current.time,
+            weatherCode = weatherStuttgart.current.weather,
+            temperature = 16f
+        )
+    }
 }

@@ -17,7 +17,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.weather"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -69,7 +69,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("junit:junit:4.12")
-    implementation("com.jakewharton.threetenabp:threetenabp:1.4.4")
+    implementation("androidx.preference:preference:1.2.1")
+    implementation("org.maplibre.gl:android-sdk:11.11.0")
+    implementation("org.maplibre.gl:android-sdk-turf:6.0.1")
 
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.androidx.core.ktx)
