@@ -5,7 +5,9 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -113,25 +116,15 @@ class MainActivity : ComponentActivity() {
                                     )
                                 delay(1000)
                             }
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                item {
-                                    Climate(
-                                        climateInfo,
-                                        weatherTodayDTO = newHourlyMap,
-                                        modifier = Modifier
-                                    ) { days ->
-                                        println(days.toString())
-                                        if (days < 2) {
-                                            selectedDay = days
-                                        } else {
-                                            //Aqui é o caso que devemos navegar pra próxima tela, mostrando a previsão (range) dos próximos 7 dias.
-                                        }
-                                    }
+                            Column() {
+                                Climate(
+                                    climateInfo,
+                                    weatherTodayDTO = newHourlyMap,
+                                    modifier = Modifier
+                                ) { days ->
+                                    selectedDay = days
                                 }
-
-                                item {
+                                if (selectedDay < 2) {
                                     MapLibreMapView(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -139,6 +132,8 @@ class MainActivity : ComponentActivity() {
                                             .padding(16.dp),
                                         apiKey = apiKey
                                     )
+                                } else {
+                                    //Chamar as WeatherRow com lazycolumn, puxando o segundo dado da API.
                                 }
                             }
                         } else {
@@ -150,6 +145,83 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+@Composable
+fun WeatherRow(
+    modifier: Modifier = Modifier,
+    temperatureMin: Int, temperatureMax: Int, weatherCode: Int
+) {
+    Row(modifier = modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(text = "Today", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(modifier = modifier.size(14.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                temperatureMin.toString() + "°",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = modifier.size(8.dp))
+            TempBar(
+                temperatureMin = temperatureMin,
+                temperatureMax = temperatureMax,
+                totalWidth = 100
+            )
+            Spacer(modifier = modifier.size(8.dp))
+            Text(
+                temperatureMax.toString() + "°",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Spacer(modifier = modifier.size(14.dp))
+        Text(getWeatherEmoji(weatherCode = weatherCode), fontSize = 32.sp)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun weatherRowPreview(modifier: Modifier = Modifier) {
+    WeatherRow(temperatureMin = 13, temperatureMax = 22, weatherCode = 2)
+}
+
+@Composable
+private fun TempBar(
+    modifier: Modifier = Modifier,
+    temperatureMin: Int,
+    temperatureMax: Int,
+    totalWidth: Int,
+) {
+    val color = getBarColor((temperatureMax + temperatureMin) / 2)
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val boxes: Pair<Float, Float>
+    boxes = getBoxSizes(temperatureMin, temperatureMax)
+    val barHeight = 6.dp
+    Row() {
+        Box(
+            modifier = Modifier
+                .width(width = totalWidth.dp)
+                .height(barHeight)
+                .background(color = backgroundColor)
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(width = totalWidth.dp * boxes.first)
+                    .height(barHeight)
+                    .background(color)
+                // .clip(RoundedCornerShape(12.dp))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(width = totalWidth.dp * boxes.second * boxes.first)
+                        .height(barHeight)
+                        .background(backgroundColor)
+                    // .clip(RoundedCornerShape(12.dp))
+                )
+            }
+        }
+    }
+}
+
 
 suspend fun convertWeatherTodayDTOToListHourlyWeather(
     weatherTodayDTO: WeatherTodayDTO, days: Int = 0
@@ -394,7 +466,7 @@ val stuttgart: ClimateInfo = ClimateInfo(
     "Sao Paulo", 2, 18f, 10f, 98, 1.0f, "2021-09-12T10:00"
 )
 
-val weatherStuttgart = WeatherTodayDTO(
+val weatherSaoPauloToday = WeatherTodayDTO(
     hourly = WeatherTodayDTO.Hourly(
         time = listOf(
             "2025-07-03T00:00",
@@ -445,7 +517,8 @@ val weatherStuttgart = WeatherTodayDTO(
             "2025-07-04T21:00",
             "2025-07-04T22:00",
             "2025-07-04T23:00",
-        ), temperature = listOf(
+        ),
+        temperature = listOf(
             9.7f,
             9.6f,
             9.4f,
@@ -494,7 +567,8 @@ val weatherStuttgart = WeatherTodayDTO(
             11.7f,
             11.2f,
             10.7f
-        ), weatherCode = listOf(
+        ),
+        weatherCode = listOf(
             3,
             51,
             3,
@@ -544,13 +618,39 @@ val weatherStuttgart = WeatherTodayDTO(
             2,
             2
         )
-    ), current = WeatherTodayDTO.Current(
+    ),
+    current = WeatherTodayDTO.Current(
         temperature = 18f,
         humidity = 98,
         wind = 10f,
         rain = 1.0f,
         weather = 2,
         time = "2021-09-12T10:00"
+    )
+)
+
+val weatherSaoPauloNextDays = WeatherNextDaysDTO(
+    current = WeatherNextDaysDTO.Current(
+        temperature = 18f,
+        humidity = 98,
+        wind = 10f,
+        rain = 1.0f,
+        weather = 2,
+        time = "2021-09-12T10:00"
+    ),
+    daily = WeatherNextDaysDTO.Daily(
+        time = listOf(
+            "2025-07-05",
+            "2025-07-06",
+            "2025-07-07",
+            "2025-07-08",
+            "2025-07-09",
+            "2025-07-10",
+            "2025-07-11"
+        ),
+        weatherCode = listOf(45, 45, 45, 45, 45, 45, 45),
+        temperatureMax = listOf(18.5f, 16.5f, 18.3f, 20.5f, 16.4f, 18.2f, 19.9f),
+        temperatureMin = listOf(7.0f, 7.5f, 8.5f, 8.5f, 5.9f, 9.8f, 8.7f)
     )
 )
 
@@ -611,7 +711,7 @@ fun ClimatePreview() {
         var hourlyWeather: List<HourlyWeather>
         runBlocking {
             hourlyWeather = convertWeatherTodayDTOToListHourlyWeather(
-                weatherStuttgart
+                weatherSaoPauloToday
             )
             delay(500)
         }
@@ -630,8 +730,8 @@ fun ClimateHourCardPreview(modifier: Modifier = Modifier) {
     WeatherTheme {
         ClimateHourCard(
             modifier = modifier.size(120.dp),
-            time = weatherStuttgart.current.time,
-            weatherCode = weatherStuttgart.current.weather,
+            time = weatherSaoPauloToday.current.time,
+            weatherCode = weatherSaoPauloToday.current.weather,
             temperature = 16f
         )
     }

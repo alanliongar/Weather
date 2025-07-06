@@ -1,14 +1,35 @@
 package com.example.weather
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import java.util.*
 import java.time.*
 import java.time.format.*
 
 
 fun main() {
-    val date = "2025-07-02T18:30"
+    println(getBoxSizes(0, 22))
+    /*val date = "2025-07-02T18:30"
     val actual = getHour(date)
-    println(actual)
+    println(actual)*/
+}
+
+fun getBoxSizes(tempMin: Int, tempMax: Int): Pair<Float, Float> {
+    val box1: Int
+    val box2: Int
+    box2 = (tempMax - tempMin) * 10 / 7
+    box1 = (100 - box2) / 2
+
+    return Pair((box1 + box2).toFloat() / 100, ((100 * box1) / (box1 + box2)).toFloat() / 100)
+}
+
+fun getBarColor(avgTemp: Int): Color {
+    val minTemp = 0
+    val maxTemp = 40
+    val clamped = avgTemp.coerceIn(minTemp, maxTemp)
+    val fraction = (clamped - minTemp).toFloat() / (maxTemp - minTemp)
+
+    return lerp(Color.Blue, Color.Red, fraction)
 }
 
 fun getHour(isoDateTime: String): Int {
