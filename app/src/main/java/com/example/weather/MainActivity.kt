@@ -1,5 +1,6 @@
 package com.example.weather
 
+import android.R.attr.maxWidth
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -32,6 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,11 +64,48 @@ class MainActivity : ComponentActivity() {
             WeatherTheme {
                 var selectedDay by remember { mutableStateOf(0) }
                 var todayWeather by remember { mutableStateOf<WeatherTodayDTO?>(null) }
+                var nextDaysWeather by remember { mutableStateOf<WeatherNextDaysDTO?>(null) }
+
                 var newHourlyMap by remember {
                     mutableStateOf<List<HourlyWeather>>(emptyList())
                 }
+
+                var newDailyWeather by remember {
+                    mutableStateOf<List<DailyWeather>>(emptyList())
+                }
+
                 val weatherTodayService =
                     WeatherRetrofitClient.retrofitInstance.create(WeatherTodayService::class.java)
+                val weatherNextDaysService = WeatherRetrofitClient.retrofitInstance.create(
+                    WeatherNextDaysService::class.java
+                )
+
+                val callWeatherNextDaysService =
+                    weatherNextDaysService.getNextDaysWeather(-23.78f, -46.69f)
+                callWeatherNextDaysService.enqueue(object : Callback<WeatherNextDaysDTO> {
+                    override fun onResponse(
+                        call: Call<WeatherNextDaysDTO?>,
+                        response: Response<WeatherNextDaysDTO?>
+                    ) {
+                        if (response.isSuccessful) {
+                            if (response.body() != null) {
+                                nextDaysWeather = response.body()
+                            } else {
+                                Log.d("MainActivity", "Request Error :: Empty response")
+                            }
+                        } else {
+                            Log.d("MainActivity", "Request Error :: ${response.errorBody()}")
+                        }
+                    }
+
+                    override fun onFailure(
+                        call: Call<WeatherNextDaysDTO?>,
+                        t: Throwable
+                    ) {
+                        Log.d("MainActivity", "Network Error :: ${t.message}")
+                    }
+                })
+
                 val callTodayWeather = weatherTodayService.getTodayWeather(-23.78f, -46.69f)
                 callTodayWeather.enqueue(object : Callback<WeatherTodayDTO> {
                     override fun onResponse(
@@ -86,11 +127,16 @@ class MainActivity : ComponentActivity() {
                         Log.d("MainActivity", "Network Error :: ${t.message}")
                     }
                 })
-                LaunchedEffect(selectedDay, todayWeather) {
+                LaunchedEffect(selectedDay) {
                     if (todayWeather != null) {
                         newHourlyMap =
                             convertWeatherTodayDTOToListHourlyWeather(todayWeather!!, selectedDay)
                     }
+                    if (selectedDay > 2 && nextDaysWeather != null) {
+                        newDailyWeather =
+                            convertWeatherNextDaysDTOToListDailyWeather(nextDaysWeather!!)
+                    }
+
                 }
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
@@ -134,6 +180,17 @@ class MainActivity : ComponentActivity() {
                                     )
                                 } else {
                                     //Chamar as WeatherRow com lazycolumn, puxando o segundo dado da API.
+                                    //nextDaysWeather
+                                    LazyColumn() {
+                                        items(newDailyWeather) { forecast ->
+                                            WeatherRow(
+                                                temperatureMax = forecast.temperatureMax,
+                                                temperatureMin = forecast.temperatureMin,
+                                                weatherCode = forecast.weatherCode,
+                                                time = forecast.time
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         } else {
@@ -148,32 +205,41 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun WeatherRow(
-    modifier: Modifier = Modifier,
-    temperatureMin: Int, temperatureMax: Int, weatherCode: Int
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    temperatureMin: Int, temperatureMax: Int, weatherCode: Int, time: String
 ) {
-    Row(modifier = modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "Today", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-        Spacer(modifier = modifier.size(14.dp))
+    Row(
+        modifier = modifier.padding(top = 24.dp, start = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = time.padEnd(10),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = FontFamily.Monospace
+        )
+        Spacer(modifier = Modifier.size(14.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                temperatureMin.toString() + "°",
-                fontSize = 14.sp,
+                text = String.format("%+03d", temperatureMin).replace('+', ' ') + "°",
+                fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold
             )
-            Spacer(modifier = modifier.size(8.dp))
+            Spacer(modifier = Modifier.size(8.dp))
             TempBar(
+                modifier = modifier,
                 temperatureMin = temperatureMin,
                 temperatureMax = temperatureMax,
-                totalWidth = 100
+                totalWidth = 126
             )
-            Spacer(modifier = modifier.size(8.dp))
+            Spacer(modifier = Modifier.size(8.dp))
             Text(
-                temperatureMax.toString() + "°",
-                fontSize = 14.sp,
+                text = String.format("%+03d", temperatureMax).replace('+', ' ') + "°",
+                fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }
-        Spacer(modifier = modifier.size(14.dp))
+        Spacer(modifier = Modifier.size(14.dp))
         Text(getWeatherEmoji(weatherCode = weatherCode), fontSize = 32.sp)
     }
 }
@@ -181,7 +247,7 @@ fun WeatherRow(
 @Preview(showBackground = true)
 @Composable
 fun weatherRowPreview(modifier: Modifier = Modifier) {
-    WeatherRow(temperatureMin = 13, temperatureMax = 22, weatherCode = 2)
+    WeatherRow(temperatureMin = 13, temperatureMax = 22, weatherCode = 2, time = "Today")
 }
 
 @Composable
@@ -195,7 +261,7 @@ private fun TempBar(
     val backgroundColor = MaterialTheme.colorScheme.background
     val boxes: Pair<Float, Float>
     boxes = getBoxSizes(temperatureMin, temperatureMax)
-    val barHeight = 6.dp
+    val barHeight = 8.dp
     Row() {
         Box(
             modifier = Modifier
@@ -208,18 +274,32 @@ private fun TempBar(
                     .width(width = totalWidth.dp * boxes.first)
                     .height(barHeight)
                     .background(color)
-                // .clip(RoundedCornerShape(12.dp))
             ) {
                 Box(
                     modifier = Modifier
                         .width(width = totalWidth.dp * boxes.second * boxes.first)
                         .height(barHeight)
                         .background(backgroundColor)
-                    // .clip(RoundedCornerShape(12.dp))
                 )
             }
         }
     }
+}
+
+
+suspend fun convertWeatherNextDaysDTOToListDailyWeather(
+    weatherNextDaysDTO: WeatherNextDaysDTO
+): List<DailyWeather> {
+    val converted: List<DailyWeather> =
+        weatherNextDaysDTO.daily.weatherCode.indices.map { index ->
+            DailyWeather(
+                time = getWeekDay(weatherNextDaysDTO.daily.time[index]),
+                temperatureMax = weatherNextDaysDTO.daily.temperatureMax[index].toInt(),
+                temperatureMin = weatherNextDaysDTO.daily.temperatureMin[index].toInt(),
+                weatherCode = weatherNextDaysDTO.daily.weatherCode[index]
+            )
+        }
+    return converted
 }
 
 
@@ -462,6 +542,13 @@ data class HourlyWeather(
     val weatherCode: Int,
 )
 
+data class DailyWeather(
+    val time: String,
+    val temperatureMin: Int,
+    val temperatureMax: Int,
+    val weatherCode: Int
+)
+
 val stuttgart: ClimateInfo = ClimateInfo(
     "Sao Paulo", 2, 18f, 10f, 98, 1.0f, "2021-09-12T10:00"
 )
@@ -683,26 +770,26 @@ fun getWeatherDescription(weatherCode: Int): String {
 
 private fun getWeatherEmoji(weatherCode: Int): String {
     return when (weatherCode) {
-        0 -> "☀" // Clear sky
-        1, 2, 3 -> "\uD83C\uDF25" // Cloudy: Mainly clear, partly cloudy, overcast
-        45, 48 -> "\uD83D\uDCA6" // Fog
-        51, 53, 55 -> "\uD83C\uDF27\uFE0F" // Drizzle
-        56, 57 -> "\u2744\uD83D\uDCA6" // Freezing Drizzle
-        61, 63 -> "☔" // Rain: slight and moderate
-        65 -> "\uD83C\uDF27\uFE0F" // Rain: heavy
-        66, 67 -> "\u2744☔" // Freezing Rain
-        71, 73 -> "\uD83C\uDF28" // Snow: slight, moderate
-        75 -> "\u2744" // Snow: heavy
-        77 -> "\u2744" // Snow grains
-        80, 81 -> "☔" // Rain showers: slight, moderate
-        82 -> "\uD83C\uDF27\uFE0F" // Rain showers: violent
-        85 -> "\u2744" // Snow showers slight
-        86 -> "\uD83C\uDF28" // Snow showers heavy
-        95 -> "\uD83C\uDF29" // Thunderstorm: slight/moderate
-        96, 99 -> "\uD83C\uDF29⚡" // Thunderstorm + hail
-        else -> "" // Unknown
+        0 -> "☀️" // Clear sky
+        in 1..3 -> "⛅" // Mainly clear, partly cloudy, and overcast
+        45, 48 -> "\uD83E\uDD76" // Fog and depositing rime fog
+        in 51..55 -> "🌦️" // Drizzle: Light, moderate, and dense intensity
+        in 56..57 -> "🌧️❄️" // Freezing Drizzle: Light and dense intensity
+        in 61..63 -> "🌧️" // Rain: Slight and moderate intensity
+        65 -> "🌧️🌧️" // Rain: Heavy intensity
+        in 66..67 -> "🌧️❄️" // Freezing Rain: Light and heavy intensity
+        in 71..75 -> "❄️" // Snow fall: Slight, moderate, and heavy intensity
+        77 -> "🌨️" // Snow grains
+        in 80..81 -> "🌧️" // Rain showers: Slight and moderate
+        82 -> "🌧️🌩️" // Rain showers: Violent
+        85 -> "❄️" // Snow showers: Slight
+        86 -> "❄️🌨️" // Snow showers: Heavy
+        95 -> "⛈️" // Thunderstorm: Slight or moderate
+        in 96..99 -> "⛈️⚡" // Thunderstorm with slight and heavy hail
+        else -> "❓" // Unknown
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

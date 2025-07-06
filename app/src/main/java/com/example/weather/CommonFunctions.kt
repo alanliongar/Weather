@@ -54,6 +54,18 @@ fun getDay(isoDateTime: String): Int {
     }
 }
 
+fun getWeekDay(isoDateTime: String): String {
+    return if ("T" in isoDateTime) {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+        val dateTime = LocalDateTime.parse(isoDateTime, formatter)
+        dateTime.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.US)
+    } else {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val date = LocalDate.parse(isoDateTime, formatter)
+        date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.US)
+    }
+}
+
 
 fun formatToHourPeriod(isoDateTime: String): String {
     val inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
