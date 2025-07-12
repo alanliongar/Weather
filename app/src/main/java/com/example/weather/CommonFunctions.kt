@@ -81,3 +81,91 @@ fun formatToFullDate(isoDateTime: String): String {
     return dateTime.format(outputFormatter)
 }
 
+fun getWeatherEmoji(weatherCode: Int): String {
+    return when (weatherCode) {
+        0 -> "☀️" // Clear sky
+        in 1..3 -> "⛅" // Mainly clear, partly cloudy, and overcast
+        45, 48 -> "\uD83E\uDD76" // Fog and depositing rime fog
+        in 51..55 -> "🌦️" // Drizzle: Light, moderate, and dense intensity
+        in 56..57 -> "🌧️❄️" // Freezing Drizzle: Light and dense intensity
+        in 61..63 -> "🌧️" // Rain: Slight and moderate intensity
+        65 -> "🌧️🌧️" // Rain: Heavy intensity
+        in 66..67 -> "🌧️❄️" // Freezing Rain: Light and heavy intensity
+        in 71..75 -> "❄️" // Snow fall: Slight, moderate, and heavy intensity
+        77 -> "🌨️" // Snow grains
+        in 80..81 -> "🌧️" // Rain showers: Slight and moderate
+        82 -> "🌧️🌩️" // Rain showers: Violent
+        85 -> "❄️" // Snow showers: Slight
+        86 -> "❄️🌨️" // Snow showers: Heavy
+        95 -> "⛈️" // Thunderstorm: Slight or moderate
+        in 96..99 -> "⛈️⚡" // Thunderstorm with slight and heavy hail
+        else -> "❓" // Unknown
+    }
+}
+
+fun getWeatherDescription(weatherCode: Int): String {
+    return when (weatherCode) {
+        0 -> "Clear"
+        1, 2, 3 -> "Cloudy"
+        45, 48 -> "Fog"
+        51, 53, 55 -> "Drizzle"
+        56, 57 -> "Icy"
+        61, 63, 65 -> "Rain"
+        66, 67 -> "Icy"
+        71, 73, 75, 77, 85, 86 -> "Snow"
+        80, 81, 82 -> "Showers"
+        95 -> "Thunder"
+        96, 99 -> "Thunderstorm"
+        else -> "Unknown"
+    }
+}
+
+suspend fun convertWeatherTodayDTOToListHourlyWeather(
+    weatherTodayDTO: WeatherTodayDTO, days: Int = 0
+): List<HourlyWeather> {
+    val hourlyMap: List<HourlyWeather>
+    if (days == 0) {
+        hourlyMap = weatherTodayDTO.hourly.time.indices.mapNotNull { index ->
+            if (getHour(weatherTodayDTO.hourly.time[index]) >= getHour(weatherTodayDTO.current.time) && getDay(
+                    weatherTodayDTO.hourly.time[index]
+                ) == getDay(weatherTodayDTO.current.time) + days
+            ) {
+                HourlyWeather(
+                    time = weatherTodayDTO.hourly.time[index],
+                    temperature = weatherTodayDTO.hourly.temperature[index],
+                    weatherCode = weatherTodayDTO.hourly.weatherCode[index]
+                )
+            } else {
+                null
+            }
+        }
+    } else {
+        hourlyMap = weatherTodayDTO.hourly.time.indices.mapNotNull { index ->
+            if (getDay(weatherTodayDTO.hourly.time[index]) == getDay(weatherTodayDTO.current.time) + days) {
+                HourlyWeather(
+                    time = weatherTodayDTO.hourly.time[index],
+                    temperature = weatherTodayDTO.hourly.temperature[index],
+                    weatherCode = weatherTodayDTO.hourly.weatherCode[index]
+                )
+            } else {
+                null
+            }
+        }
+    }
+    return hourlyMap
+}
+
+suspend fun convertWeatherNextDaysDTOToListDailyWeather(
+    weatherNextDaysDTO: WeatherNextDaysDTO
+): List<DailyWeather> {
+    val converted: List<DailyWeather> =
+        weatherNextDaysDTO.daily.weatherCode.indices.map { index ->
+            DailyWeather(
+                time = getWeekDay(weatherNextDaysDTO.daily.time[index]),
+                temperatureMax = weatherNextDaysDTO.daily.temperatureMax[index].toInt(),
+                temperatureMin = weatherNextDaysDTO.daily.temperatureMin[index].toInt(),
+                weatherCode = weatherNextDaysDTO.daily.weatherCode[index]
+            )
+        }
+    return converted
+}
