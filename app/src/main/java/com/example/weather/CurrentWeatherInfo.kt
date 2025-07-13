@@ -1,6 +1,6 @@
 package com.example.weather
 
-data class WeatherInfo(
+data class CurrentWeatherInfo(
     val city: String,
     val weatherCode: Int,
     val temperature: Float,

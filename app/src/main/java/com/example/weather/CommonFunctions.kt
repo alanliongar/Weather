@@ -8,16 +8,13 @@ import java.time.format.*
 
 
 fun main() {
-    println(getBoxSizes(0, 22))
-    /*val date = "2025-07-02T18:30"
-    val actual = getHour(date)
-    println(actual)*/
+    println(getBarSize(0, 22))
 }
 
-fun getBoxSizes(tempMin: Int, tempMax: Int): Pair<Float, Float> {
+fun getBarSize(tempMin: Int, tempMax: Int): Pair<Float, Float> {
     val box1: Int
     val box2: Int
-    box2 = (tempMax - tempMin) * 10 / 7
+    box2 = (tempMax - tempMin) * 10 / 2
     box1 = (100 - box2) / 2
 
     return Pair((box1 + box2).toFloat() / 100, ((100 * box1) / (box1 + box2)).toFloat() / 100)
@@ -120,7 +117,7 @@ fun getWeatherDescription(weatherCode: Int): String {
     }
 }
 
-suspend fun convertWeatherTodayDTOToListHourlyWeather(
+fun convertWeatherTodayDTOToListHourlyWeather(
     weatherTodayDTO: WeatherTodayDTO, days: Int = 0
 ): List<HourlyWeather> {
     val hourlyMap: List<HourlyWeather>
@@ -155,7 +152,7 @@ suspend fun convertWeatherTodayDTOToListHourlyWeather(
     return hourlyMap
 }
 
-suspend fun convertWeatherNextDaysDTOToListDailyWeather(
+fun convertWeatherNextDaysDTOToListDailyWeather(
     weatherNextDaysDTO: WeatherNextDaysDTO
 ): List<DailyWeather> {
     val converted: List<DailyWeather> =
@@ -168,4 +165,16 @@ suspend fun convertWeatherNextDaysDTOToListDailyWeather(
             )
         }
     return converted
+}
+
+fun convertWTDTOToCWInfo(weatherTodayDTO: WeatherTodayDTO?): CurrentWeatherInfo {
+    return CurrentWeatherInfo(
+        "Sao Paulo",
+        weatherTodayDTO?.current?.weather ?: 0,
+        weatherTodayDTO?.current?.temperature ?: 0f,
+        weatherTodayDTO?.current?.wind ?: 0f,
+        weatherTodayDTO?.current?.humidity ?: 0,
+        weatherTodayDTO?.current?.rain ?: 0f,
+        weatherTodayDTO?.current?.time ?: "Error"
+    )
 }

@@ -5,16 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,9 +32,9 @@ import retrofit2.Response
 
 @Composable
 fun WeatherMainScreen(modifier: Modifier = Modifier) {
-    var selectedDay by remember { mutableStateOf(0) }
+    var selectedDay by remember { mutableStateOf<Int>(0) }
     var todayWeather by remember { mutableStateOf<WeatherTodayDTO?>(null) }
-    var nextDaysWeather by remember { mutableStateOf<WeatherNextDaysDTO?>(null) }
+    var nextSevenDaysWeather by remember { mutableStateOf<WeatherNextDaysDTO?>(null) }
 
     var newHourlyMap by remember {
         mutableStateOf<List<HourlyWeather>>(emptyList())
@@ -56,16 +50,18 @@ fun WeatherMainScreen(modifier: Modifier = Modifier) {
         WeatherNextDaysService::class.java
     )
 
-    val callWeatherNextDaysService =
-        weatherNextDaysService.getNextDaysWeather(-23.78f, -46.69f)
+    val callWeatherNextDaysService = weatherNextDaysService.getNextDaysWeather(-23.78f, -46.69f)
     callWeatherNextDaysService.enqueue(object : Callback<WeatherNextDaysDTO> {
         override fun onResponse(
-            call: Call<WeatherNextDaysDTO?>,
-            response: Response<WeatherNextDaysDTO?>
+            call: Call<WeatherNextDaysDTO?>, response: Response<WeatherNextDaysDTO?>
         ) {
             if (response.isSuccessful) {
                 if (response.body() != null) {
-                    nextDaysWeather = response.body()
+                    nextSevenDaysWeather = response.body()
+                    if (selectedDay > 2 && nextSevenDaysWeather != null) {
+                        newDailyWeather =
+                            convertWeatherNextDaysDTOToListDailyWeather(nextSevenDaysWeather!!)
+                    }
                 } else {
                     Log.d("MainActivity", "Request Error :: Empty response")
                 }
@@ -75,8 +71,7 @@ fun WeatherMainScreen(modifier: Modifier = Modifier) {
         }
 
         override fun onFailure(
-            call: Call<WeatherNextDaysDTO?>,
-            t: Throwable
+            call: Call<WeatherNextDaysDTO?>, t: Throwable
         ) {
             Log.d("MainActivity", "Network Error :: ${t.message}")
         }
@@ -91,6 +86,7 @@ fun WeatherMainScreen(modifier: Modifier = Modifier) {
                 val weather = response.body()
                 if (weather != null) {
                     todayWeather = weather
+                    newHourlyMap = convertWeatherTodayDTOToListHourlyWeather(weather, selectedDay)
                 } else {
                     Log.d("MainActivity", "Request Error :: Empty response")
                 }
@@ -105,81 +101,56 @@ fun WeatherMainScreen(modifier: Modifier = Modifier) {
     })
     LaunchedEffect(selectedDay) {
         if (todayWeather != null) {
-            newHourlyMap =
-                convertWeatherTodayDTOToListHourlyWeather(todayWeather!!, selectedDay)
+            newHourlyMap = convertWeatherTodayDTOToListHourlyWeather(todayWeather!!, selectedDay)
         }
-        if (selectedDay > 2 && nextDaysWeather != null) {
-            newDailyWeather =
-                convertWeatherNextDaysDTOToListDailyWeather(nextDaysWeather!!)
+        if (selectedDay > 2 && nextSevenDaysWeather != null) {
+            newDailyWeather = convertWeatherNextDaysDTOToListDailyWeather(nextSevenDaysWeather!!)
         }
     }
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column() {
-            Spacer(modifier = Modifier.size(28.dp))
-            if (todayWeather != null) {
-                val weatherInfo = WeatherInfo(
-                    "Sao Paulo",
-                    todayWeather?.current?.weather ?: 0,
-                    todayWeather?.current?.temperature ?: 0f,
-                    todayWeather?.current?.wind ?: 0f,
-                    todayWeather?.current?.humidity ?: 0,
-                    todayWeather?.current?.rain ?: 0f,
-                    todayWeather?.current?.time ?: "Error"
-                )
-                runBlocking {
-                    newHourlyMap =
-                        convertWeatherTodayDTOToListHourlyWeather(
-                            weatherTodayDTO = todayWeather!!,
-                            days = selectedDay
-                        )
-                    delay(500)
+
+    Column() {
+        Spacer(modifier = Modifier.size(28.dp))
+        if (todayWeather != null) {
+            Column() {
+                WeatherMainContent(
+                    modifier = Modifier,
+                    convertWTDTOToCWInfo(todayWeather),
+                    weatherTodayDTO = newHourlyMap,
+                ) { days ->
+                    selectedDay = days
                 }
-                Column() {
-                    WeatherMainContent(
-                        weatherInfo,
-                        weatherTodayDTO = newHourlyMap,
+                if (selectedDay < 2) {
+                    MapLibreMapView(
                         modifier = Modifier
-                    ) { days ->
-                        selectedDay = days
-                    }
-                    if (selectedDay < 2) {
-                        MapLibreMapView(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(360.dp)
-                                .padding(16.dp),
-                            apiKey = apiKey
-                        )
-                    } else {
-                        LazyColumn() {
-                            items(newDailyWeather) { forecast ->
-                                WeatherRow(
-                                    temperatureMax = forecast.temperatureMax,
-                                    temperatureMin = forecast.temperatureMin,
-                                    weatherCode = forecast.weatherCode,
-                                    time = forecast.time
-                                )
-                            }
-                        }
-                    }
+                            .fillMaxWidth()
+                            .height(360.dp)
+                            .padding(16.dp),
+                        apiKey = apiKey
+                    )
+                } else {
+                    WeatherRowScreen(newDailyWeather = newDailyWeather)
                 }
-            } else {
-                Text("Loading....")
             }
+        } else {
+            Spacer(modifier = Modifier.size(8.dp))
+            Text(
+                modifier = Modifier.padding(start = 15.dp),
+                text = "Loading....",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
     }
 }
 
 @Composable
-fun WeatherMainContent(
-    cityWeatherInfo: WeatherInfo,
+private fun WeatherMainContent(
     modifier: Modifier = Modifier,
+    cityCurrentWeatherInfo: CurrentWeatherInfo,
     weatherTodayDTO: List<HourlyWeather>,
-    onClick: (Int) -> Unit
-) {
+    onClick: (Int) -> Unit,
+
+    ) {
     Column(modifier = modifier.padding(10.dp)) {
         Row(modifier = modifier.fillMaxWidth()) {
             Column(
@@ -191,13 +162,13 @@ fun WeatherMainContent(
                     modifier = modifier.align(Alignment.Start),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.SemiBold,
-                    text = cityWeatherInfo.city
+                    text = cityCurrentWeatherInfo.city
                 )
                 Text(
                     modifier = modifier.align(Alignment.Start),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    text = formatToFullDate(cityWeatherInfo.date)
+                    text = formatToFullDate(cityCurrentWeatherInfo.date)
                 )
             }
         }
@@ -214,15 +185,16 @@ fun WeatherMainContent(
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = cityWeatherInfo.temperature.toString() + "°", fontSize = 60.sp
+                    text = cityCurrentWeatherInfo.temperature.toString() + "°", fontSize = 60.sp
                 )
                 Text(
-                    text = getWeatherDescription(cityWeatherInfo.weatherCode),
-                    fontSize = 18.sp, fontWeight = FontWeight.SemiBold
+                    text = getWeatherDescription(cityCurrentWeatherInfo.weatherCode),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
             Text(
-                text = getWeatherEmoji(weatherCode = cityWeatherInfo.weatherCode),
+                text = getWeatherEmoji(weatherCode = cityCurrentWeatherInfo.weatherCode),
                 fontSize = 90.sp,
                 modifier = modifier,
                 textAlign = TextAlign.Center
@@ -244,7 +216,7 @@ fun WeatherMainContent(
                 Spacer(modifier = Modifier.size(4.dp))
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = cityWeatherInfo.windSpeed.toString() + " m/s",
+                    text = cityCurrentWeatherInfo.windSpeed.toString() + " m/s",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp
                 )
@@ -265,7 +237,7 @@ fun WeatherMainContent(
                 Spacer(modifier = Modifier.size(4.dp))
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = cityWeatherInfo.humidity.toString() + "%",
+                    text = cityCurrentWeatherInfo.humidity.toString() + "%",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp
                 )
@@ -286,7 +258,7 @@ fun WeatherMainContent(
                 Spacer(modifier = Modifier.size(4.dp))
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = String.format("%.0f", cityWeatherInfo.rain * 100) + "%",
+                    text = String.format("%.0f", cityCurrentWeatherInfo.rain * 100) + "%",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp
                 )
@@ -301,43 +273,196 @@ fun WeatherMainContent(
         Spacer(modifier = Modifier.size(14.dp))
         Row(modifier = modifier) {
             Text(
-                modifier = Modifier.clickable { onClick.invoke(0) },
-                text = "Today",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
+                modifier = Modifier.clickable {
+                    onClick.invoke(0)
+                }, text = "Today", fontSize = 18.sp, fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = modifier.size(18.dp))
             Text(
-                modifier = Modifier.clickable { onClick.invoke(1) },
-                text = "Tomorrow",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
+                modifier = Modifier.clickable {
+                    onClick.invoke(1)
+                }, text = "Tomorrow", fontSize = 18.sp, fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = modifier.size(18.dp))
             Text(
-                modifier = Modifier.clickable { onClick.invoke(7) },
-                text = "Next 7 days",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
+                modifier = Modifier.clickable {
+                    onClick.invoke(7)
+                }, text = "Next 7 days", fontSize = 18.sp, fontWeight = FontWeight.SemiBold
             )
         }
         Spacer(modifier = Modifier.size(6.dp))
-        LazyRow {
-            items(weatherTodayDTO) { it ->
-                WeatherHourCard(
-                    time = it.time,
-                    weatherCode = it.weatherCode,
-                    temperature = it.temperature,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-            }
-        }
+        WeatherTodayScreen(weatherTodayDTO = weatherTodayDTO)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun ClimatePreview() {
+private fun ClimatePreview() {
+    val stuttgart: CurrentWeatherInfo = CurrentWeatherInfo(
+        "Sao Paulo", 2, 18f, 10f, 98, 1.0f, "2021-09-12T10:00"
+    )
+    val weatherSaoPauloToday = WeatherTodayDTO(
+        hourly = WeatherTodayDTO.Hourly(
+            time = listOf(
+                "2025-07-03T00:00",
+                "2025-07-03T01:00",
+                "2025-07-03T02:00",
+                "2025-07-03T03:00",
+                "2025-07-03T04:00",
+                "2025-07-03T05:00",
+                "2025-07-03T06:00",
+                "2025-07-03T07:00",
+                "2025-07-03T08:00",
+                "2025-07-03T09:00",
+                "2025-07-03T10:00",
+                "2025-07-03T11:00",
+                "2025-07-03T12:00",
+                "2025-07-03T13:00",
+                "2025-07-03T14:00",
+                "2025-07-03T15:00",
+                "2025-07-03T16:00",
+                "2025-07-03T17:00",
+                "2025-07-03T18:00",
+                "2025-07-03T19:00",
+                "2025-07-03T20:00",
+                "2025-07-03T21:00",
+                "2025-07-03T22:00",
+                "2025-07-03T23:00",
+                "2025-07-04T00:00",
+                "2025-07-04T01:00",
+                "2025-07-04T02:00",
+                "2025-07-04T03:00",
+                "2025-07-04T04:00",
+                "2025-07-04T05:00",
+                "2025-07-04T06:00",
+                "2025-07-04T07:00",
+                "2025-07-04T08:00",
+                "2025-07-04T09:00",
+                "2025-07-04T10:00",
+                "2025-07-04T11:00",
+                "2025-07-04T12:00",
+                "2025-07-04T13:00",
+                "2025-07-04T14:00",
+                "2025-07-04T15:00",
+                "2025-07-04T16:00",
+                "2025-07-04T17:00",
+                "2025-07-04T18:00",
+                "2025-07-04T19:00",
+                "2025-07-04T20:00",
+                "2025-07-04T21:00",
+                "2025-07-04T22:00",
+                "2025-07-04T23:00",
+            ),
+            temperature = listOf(
+                9.7f,
+                9.6f,
+                9.4f,
+                9.3f,
+                9.3f,
+                9.4f,
+                9.6f,
+                9.8f,
+                9.7f,
+                9.5f,
+                9.5f,
+                9.5f,
+                9.6f,
+                9.8f,
+                10.2f,
+                11.1f,
+                11.2f,
+                11.1f,
+                10.9f,
+                10.9f,
+                10.6f,
+                10.3f,
+                10.0f,
+                9.8f,
+                9.9f,
+                10.0f,
+                10.1f,
+                10.1f,
+                10.2f,
+                10.2f,
+                10.2f,
+                10.0f,
+                10.0f,
+                10.0f,
+                10.0f,
+                10.7f,
+                11.9f,
+                13.5f,
+                14.8f,
+                15.7f,
+                16.0f,
+                15.9f,
+                15.3f,
+                14.4f,
+                13.1f,
+                11.7f,
+                11.2f,
+                10.7f
+            ),
+            weatherCode = listOf(
+                3,
+                51,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2
+            )
+        ),
+        current = WeatherTodayDTO.Current(
+            temperature = 18f,
+            humidity = 98,
+            wind = 10f,
+            rain = 1.0f,
+            weather = 2,
+            time = "2021-09-12T10:00"
+        )
+    )
     WeatherTheme {
         var hourlyWeather: List<HourlyWeather>
         runBlocking {
@@ -346,9 +471,10 @@ fun ClimatePreview() {
             )
             delay(500)
         }
-
         WeatherMainContent(
-            stuttgart, weatherTodayDTO = hourlyWeather
+            modifier = Modifier,
+            stuttgart,
+            weatherTodayDTO = hourlyWeather
         ) { it ->
             println(it)
         }

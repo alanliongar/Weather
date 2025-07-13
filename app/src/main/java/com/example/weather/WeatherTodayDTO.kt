@@ -14,7 +14,6 @@ data class WeatherTodayDTO(
         @SerializedName("rain") val rain: Float,
         @SerializedName("wind_speed_10m") val wind: Float,
         @SerializedName("weather_code") val weather: Int,
-
     )
 
     data class Hourly(

@@ -22,8 +22,3 @@ data class WeatherNextDaysDTO(
         @SerializedName("temperature_2m_max") val temperatureMax: List<Float>
     )
 }
-
-val time = listOf("2025-07-05","2025-07-06","2025-07-07","2025-07-08","2025-07-09","2025-07-10","2025-07-11")
-val weatherCodeList = listOf(45, 45, 45, 45, 45, 45, 45)
-val temperatureMax = listOf(18.5, 16.5, 18.3, 20.5, 16.4, 18.2, 19.9)
-val temperatureMin = listOf(7.0, 7.5, 8.5, 8.5, 5.9, 9.8, 8.7)

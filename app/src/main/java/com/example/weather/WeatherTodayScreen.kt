@@ -27,18 +27,10 @@ fun WeatherTodayScreen(
     weatherTodayDTO: List<HourlyWeather>
 ) {
     WeatherTodayContent(weatherTodayDTO = weatherTodayDTO)
-    Spacer(modifier = Modifier.size(6.dp))
-    MapLibreMapView(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(360.dp)
-            .padding(16.dp),
-        apiKey = apiKey
-    )
 }
 
 @Composable
-fun WeatherTodayContent(
+private fun WeatherTodayContent(
     modifier: Modifier = Modifier,
     weatherTodayDTO: List<HourlyWeather>
     ) {
@@ -56,7 +48,7 @@ fun WeatherTodayContent(
 
 
 @Composable
-fun WeatherHourCard(
+private fun WeatherHourCard(
     time: String, weatherCode: Int, temperature: Float, modifier: Modifier = Modifier
 ) {
     Card(modifier = modifier.size(120.dp)) {
@@ -92,7 +84,169 @@ fun WeatherHourCard(
 
 @Preview(showBackground = true)
 @Composable
-fun ClimateHourCardPreview(modifier: Modifier = Modifier) {
+private fun ClimateHourCardPreview(modifier: Modifier = Modifier) {
+    val weatherSaoPauloToday = WeatherTodayDTO(
+        hourly = WeatherTodayDTO.Hourly(
+            time = listOf(
+                "2025-07-03T00:00",
+                "2025-07-03T01:00",
+                "2025-07-03T02:00",
+                "2025-07-03T03:00",
+                "2025-07-03T04:00",
+                "2025-07-03T05:00",
+                "2025-07-03T06:00",
+                "2025-07-03T07:00",
+                "2025-07-03T08:00",
+                "2025-07-03T09:00",
+                "2025-07-03T10:00",
+                "2025-07-03T11:00",
+                "2025-07-03T12:00",
+                "2025-07-03T13:00",
+                "2025-07-03T14:00",
+                "2025-07-03T15:00",
+                "2025-07-03T16:00",
+                "2025-07-03T17:00",
+                "2025-07-03T18:00",
+                "2025-07-03T19:00",
+                "2025-07-03T20:00",
+                "2025-07-03T21:00",
+                "2025-07-03T22:00",
+                "2025-07-03T23:00",
+                "2025-07-04T00:00",
+                "2025-07-04T01:00",
+                "2025-07-04T02:00",
+                "2025-07-04T03:00",
+                "2025-07-04T04:00",
+                "2025-07-04T05:00",
+                "2025-07-04T06:00",
+                "2025-07-04T07:00",
+                "2025-07-04T08:00",
+                "2025-07-04T09:00",
+                "2025-07-04T10:00",
+                "2025-07-04T11:00",
+                "2025-07-04T12:00",
+                "2025-07-04T13:00",
+                "2025-07-04T14:00",
+                "2025-07-04T15:00",
+                "2025-07-04T16:00",
+                "2025-07-04T17:00",
+                "2025-07-04T18:00",
+                "2025-07-04T19:00",
+                "2025-07-04T20:00",
+                "2025-07-04T21:00",
+                "2025-07-04T22:00",
+                "2025-07-04T23:00",
+            ),
+            temperature = listOf(
+                9.7f,
+                9.6f,
+                9.4f,
+                9.3f,
+                9.3f,
+                9.4f,
+                9.6f,
+                9.8f,
+                9.7f,
+                9.5f,
+                9.5f,
+                9.5f,
+                9.6f,
+                9.8f,
+                10.2f,
+                11.1f,
+                11.2f,
+                11.1f,
+                10.9f,
+                10.9f,
+                10.6f,
+                10.3f,
+                10.0f,
+                9.8f,
+                9.9f,
+                10.0f,
+                10.1f,
+                10.1f,
+                10.2f,
+                10.2f,
+                10.2f,
+                10.0f,
+                10.0f,
+                10.0f,
+                10.0f,
+                10.7f,
+                11.9f,
+                13.5f,
+                14.8f,
+                15.7f,
+                16.0f,
+                15.9f,
+                15.3f,
+                14.4f,
+                13.1f,
+                11.7f,
+                11.2f,
+                10.7f
+            ),
+            weatherCode = listOf(
+                3,
+                51,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2
+            )
+        ),
+        current = WeatherTodayDTO.Current(
+            temperature = 18f,
+            humidity = 98,
+            wind = 10f,
+            rain = 1.0f,
+            weather = 2,
+            time = "2021-09-12T10:00"
+        )
+    )
     WeatherTheme {
         WeatherHourCard(
             modifier = modifier.size(120.dp),
