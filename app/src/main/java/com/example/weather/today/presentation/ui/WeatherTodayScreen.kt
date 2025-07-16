@@ -1,8 +1,5 @@
-package com.example.weather
+package com.example.weather.today.presentation.ui
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -17,6 +14,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weather.common.data.model.HourlyWeather
+import com.example.weather.common.formatToHourPeriod
+import com.example.weather.common.getWeatherEmoji
+import com.example.weather.today.data.model.WeatherTodayDTO
 import com.example.weather.ui.theme.WeatherTheme
 import java.util.Locale
 

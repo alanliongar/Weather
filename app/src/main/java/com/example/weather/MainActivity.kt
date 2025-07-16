@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.example.weather.current.presentation.ui.WeatherCurrentScreen
 import com.example.weather.ui.theme.WeatherTheme
 import org.maplibre.android.MapLibre
 import org.maplibre.android.WellKnownTileServer
@@ -29,7 +30,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    WeatherMainScreen()
+                    WeatherCurrentScreen()
                 }
             }
         }

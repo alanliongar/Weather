@@ -1,4 +1,4 @@
-package com.example.weather
+package com.example.weather.current.presentation.ui
 
 import android.util.Log
 import androidx.compose.foundation.clickable
@@ -23,6 +23,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weather.nextdays.data.model.WeatherNextDaysDTO
+import com.example.weather.nextdays.data.remote.WeatherNextDaysService
+import com.example.weather.nextdays.presentation.ui.WeatherRowScreen
+import com.example.weather.today.data.model.WeatherTodayDTO
+import com.example.weather.today.presentation.ui.WeatherTodayScreen
+import com.example.weather.today.data.remote.WeatherTodayService
+import com.example.weather.apiKey
+import com.example.weather.common.presentation.ui.MapLibreMapView
+import com.example.weather.common.data.remote.WeatherRetrofitClient
+import com.example.weather.common.convertWTDTOToCWInfo
+import com.example.weather.common.convertWeatherNextDaysDTOToListDailyWeather
+import com.example.weather.common.convertWeatherTodayDTOToListHourlyWeather
+import com.example.weather.common.formatToFullDate
+import com.example.weather.common.getWeatherDescription
+import com.example.weather.common.getWeatherEmoji
+import com.example.weather.nextdays.data.model.DailyWeather
+import com.example.weather.common.data.model.HourlyWeather
+import com.example.weather.current.data.model.CurrentWeatherInfo
 import com.example.weather.ui.theme.WeatherTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -31,7 +49,7 @@ import retrofit2.Callback
 import retrofit2.Response
 
 @Composable
-fun WeatherMainScreen(modifier: Modifier = Modifier) {
+fun WeatherCurrentScreen(modifier: Modifier = Modifier) {
     var selectedDay by remember { mutableStateOf<Int>(0) }
     var todayWeather by remember { mutableStateOf<WeatherTodayDTO?>(null) }
     var nextSevenDaysWeather by remember { mutableStateOf<WeatherNextDaysDTO?>(null) }

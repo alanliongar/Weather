@@ -1,4 +1,4 @@
-package com.example.weather
+package com.example.weather.nextdays.presentation.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -21,6 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weather.common.getBarColor
+import com.example.weather.common.getBarSize
+import com.example.weather.common.getWeatherEmoji
+import com.example.weather.nextdays.data.model.DailyWeather
+import com.example.weather.nextdays.data.model.WeatherNextDaysDTO
 
 
 @Composable

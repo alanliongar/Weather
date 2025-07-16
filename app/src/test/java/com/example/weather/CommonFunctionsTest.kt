@@ -9,7 +9,7 @@ class CommonFunctionsTest {
         val date = "2025-07-02T18:30"
 
         //When
-        val actual = formatToHourPeriod(date)
+        val actual = _root_ide_package_.com.example.weather.common.formatToHourPeriod(date)
 
         //Then
         assertEqualsVerbose("06 pm", actual)
@@ -21,7 +21,7 @@ class CommonFunctionsTest {
         val date = "2025-07-02T18:30"
 
         //When
-        val actual = formatToFullDate(date)
+        val actual = _root_ide_package_.com.example.weather.common.formatToFullDate(date)
 
         //Then
         assertEqualsVerbose("02 July, Wednesday", actual)

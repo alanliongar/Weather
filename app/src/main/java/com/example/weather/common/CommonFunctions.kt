@@ -1,7 +1,12 @@
-package com.example.weather
+package com.example.weather.common
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import com.example.weather.common.data.model.HourlyWeather
+import com.example.weather.current.data.model.CurrentWeatherInfo
+import com.example.weather.nextdays.data.model.DailyWeather
+import com.example.weather.nextdays.data.model.WeatherNextDaysDTO
+import com.example.weather.today.data.model.WeatherTodayDTO
 import java.util.*
 import java.time.*
 import java.time.format.*
