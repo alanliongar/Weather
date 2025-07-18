@@ -3,9 +3,9 @@ package com.example.weather.current.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.weather.current.data.model.CurrentWeatherUiData
+import com.example.weather.current.data.remote.WeatherCurrentService
 import com.example.weather.current.presentation.ui.CurrentWeatherUiState
 import com.example.weather.today.data.model.WeatherTodayDTO
-import com.example.weather.today.data.remote.WeatherTodayService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import retrofit2.Call
@@ -13,8 +13,15 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class WeatherCurrentViewModel(
-    private val weatherTodayService: WeatherTodayService
+    private val weatherCurrentService: WeatherCurrentService,
 ) : ViewModel() {
+
+    private val _selectedDays = MutableStateFlow<Int>(1)
+    val selectedDays: StateFlow<Int> = _selectedDays
+
+    fun changeDays(selectedDays: Int) {
+        _selectedDays.value = selectedDays
+    }
 
     private val _uiCurrentWeather = MutableStateFlow<CurrentWeatherUiState>(CurrentWeatherUiState())
     val uiCurrentWeather: StateFlow<CurrentWeatherUiState> = _uiCurrentWeather
@@ -28,11 +35,16 @@ class WeatherCurrentViewModel(
     )
     val uiHourlyWeather: StateFlow<WeatherTodayDTO.Hourly> = _uiHourlyWeather
 
+
     init {
         _uiCurrentWeather.value = _uiCurrentWeather.value.copy(
             isLoading = true
         )
-        val callTodayWeather = weatherTodayService.getTodayWeather(-23.78f, -46.69f)
+        val callTodayWeather = weatherCurrentService.getCurrentWeatherData(
+            -23.78f,
+            -46.69f,
+            forecastDays = _selectedDays.value
+        )
         callTodayWeather.enqueue(object : Callback<WeatherTodayDTO> {
             override fun onResponse(
                 call: Call<WeatherTodayDTO>, response: Response<WeatherTodayDTO>
@@ -83,5 +95,10 @@ class WeatherCurrentViewModel(
                 Log.d("WeatherCurrentViewModel", "Network Error :: ${t.message}")
             }
         })
+    }
+
+
+    companion object {
+
     }
 }

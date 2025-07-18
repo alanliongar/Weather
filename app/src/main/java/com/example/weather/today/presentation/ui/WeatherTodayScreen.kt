@@ -25,24 +25,32 @@ import java.util.Locale
 @Composable
 fun WeatherTodayScreen(
     modifier: Modifier = Modifier,
-    weatherTodayDTO: List<HourlyWeatherUiData>
+    weatherTodayUiState: WeatherTodayUiState
 ) {
-    WeatherTodayContent(weatherTodayDTO = weatherTodayDTO)
+    WeatherTodayContent(weatherTodayUiState = weatherTodayUiState)
 }
 
 @Composable
 private fun WeatherTodayContent(
     modifier: Modifier = Modifier,
-    weatherTodayDTO: List<HourlyWeatherUiData>
-    ) {
-    LazyRow {
-        items(weatherTodayDTO) { dayWeather ->
-            WeatherHourCard(
-                time = dayWeather.time,
-                weatherCode = dayWeather.weatherCode,
-                temperature = dayWeather.temperature,
-                modifier = Modifier.padding(end = 8.dp)
-            )
+    weatherTodayUiState: WeatherTodayUiState
+) {
+    if (!weatherTodayUiState.isError && !weatherTodayUiState.isLoading) {
+        LazyRow {
+            items(weatherTodayUiState.hourlyWeather) { dayWeather ->
+                WeatherHourCard(
+                    time = dayWeather.time,
+                    weatherCode = dayWeather.weatherCode,
+                    temperature = dayWeather.temperature,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
+        }
+    } else {
+        if (weatherTodayUiState.isLoading) {
+            Text("Loading....")
+        } else {
+            Text(weatherTodayUiState.errorMessage)
         }
     }
 }

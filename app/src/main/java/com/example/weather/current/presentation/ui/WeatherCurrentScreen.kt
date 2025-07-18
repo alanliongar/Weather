@@ -1,6 +1,5 @@
 package com.example.weather.current.presentation.ui
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,7 +17,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -25,125 +25,58 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weather.nextdays.data.model.WeatherNextDaysDTO
-import com.example.weather.nextdays.data.remote.WeatherNextDaysService
 import com.example.weather.nextdays.presentation.ui.WeatherRowScreen
 import com.example.weather.today.data.model.WeatherTodayDTO
 import com.example.weather.today.presentation.ui.WeatherTodayScreen
-import com.example.weather.today.data.remote.WeatherTodayService
 import com.example.weather.apiKey
 import com.example.weather.common.presentation.ui.MapLibreMapView
-import com.example.weather.common.data.remote.WeatherRetrofitClient
-import com.example.weather.common.convertWeatherNextDaysDTOToListDailyWeather
 import com.example.weather.common.convertWeatherHourlyFromDTOToListHourlyWeather
 import com.example.weather.common.formatToFullDate
 import com.example.weather.common.getWeatherDescription
 import com.example.weather.common.getWeatherEmoji
-import com.example.weather.nextdays.data.model.DailyWeather
 import com.example.weather.common.data.model.HourlyWeatherUiData
 import com.example.weather.current.data.model.CurrentWeatherUiData
 import com.example.weather.current.presentation.WeatherCurrentViewModel
+import com.example.weather.nextdays.presentation.WeatherNextDaysViewModel
+import com.example.weather.today.presentation.WeatherTodayViewModel
+import com.example.weather.today.presentation.ui.WeatherTodayUiState
 import com.example.weather.ui.theme.WeatherTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 @Composable
 fun WeatherCurrentScreen(
     modifier: Modifier = Modifier,
     weatherCurrentViewModel: WeatherCurrentViewModel,
+    weatherTodayViewModel: WeatherTodayViewModel,
+    weatherNextDaysViewModel: WeatherNextDaysViewModel
 ) {
-    var selectedDay by remember { mutableStateOf<Int>(0) }
+    val selectedDay by weatherCurrentViewModel.selectedDays.collectAsState()
+    val currentWeather by weatherCurrentViewModel.uiCurrentWeather.collectAsState()
+    val hourlyWeather by weatherCurrentViewModel.uiHourlyWeather.collectAsState()
+    val weatherTodayUiState by weatherTodayViewModel.uiWeatherToday.collectAsState()
+    val nextDaysWeather by weatherNextDaysViewModel.uiWeatherNextDaysUiState.collectAsState()
+    val nextSevenDaysWeather by remember { mutableStateOf<WeatherNextDaysDTO?>(null) }
 
-    val todayWeather = weatherCurrentViewModel.uiCurrentWeather.collectAsState()
-    val hourlyWeather = weatherCurrentViewModel.uiHourlyWeather.collectAsState()
 
-    var nextSevenDaysWeather by remember { mutableStateOf<WeatherNextDaysDTO?>(null) }
-
-    var newHourlyMap by remember {
-        mutableStateOf<List<HourlyWeatherUiData>>(emptyList())
-    }
-
-    var newDailyWeather by remember {
-        mutableStateOf<List<DailyWeather>>(emptyList())
-    }
-
-    val weatherTodayService =
-        WeatherRetrofitClient.retrofitInstance.create(WeatherTodayService::class.java)
-    val weatherNextDaysService = WeatherRetrofitClient.retrofitInstance.create(
-        WeatherNextDaysService::class.java
-    )
-
-    val callWeatherNextDaysService = weatherNextDaysService.getNextDaysWeather(-23.78f, -46.69f)
-
-    callWeatherNextDaysService.enqueue(object : Callback<WeatherNextDaysDTO> {
-        override fun onResponse(
-            call: Call<WeatherNextDaysDTO?>, response: Response<WeatherNextDaysDTO?>
-        ) {
-            if (response.isSuccessful) {
-                if (response.body() != null) {
-                    nextSevenDaysWeather = response.body()
-                    if (selectedDay > 2 && nextSevenDaysWeather != null) {
-                        newDailyWeather =
-                            convertWeatherNextDaysDTOToListDailyWeather(nextSevenDaysWeather!!)
-                    }
-                } else {
-                    Log.d("MainActivity", "Request Error :: Empty response")
-                }
-            } else {
-                Log.d("MainActivity", "Request Error :: ${response.errorBody()}")
-            }
-        }
-
-        override fun onFailure(
-            call: Call<WeatherNextDaysDTO?>, t: Throwable
-        ) {
-            Log.d("MainActivity", "Network Error :: ${t.message}")
-        }
-    })
-
-    val callTodayWeather = weatherTodayService.getTodayWeather(-23.78f, -46.69f)
-    callTodayWeather.enqueue(object : Callback<WeatherTodayDTO> {
-        override fun onResponse(
-            call: Call<WeatherTodayDTO>, response: Response<WeatherTodayDTO>
-        ) {
-            if (response.isSuccessful) {
-                val weather = response.body()
-                if (weather != null) {
-                    newHourlyMap = convertWeatherHourlyFromDTOToListHourlyWeather(hourlyWeather.value, selectedDay)
-                } else {
-                    Log.d("MainActivity", "Request Error :: Empty response")
-                }
-            } else {
-                Log.d("MainActivity", "Request Error :: ${response.errorBody()}")
-            }
-        }
-
-        override fun onFailure(call: Call<WeatherTodayDTO>, t: Throwable) {
-            Log.d("MainActivity", "Network Error :: ${t.message}")
-        }
-
-    })
     LaunchedEffect(selectedDay) {
-        if (todayWeather != null) {
-            newHourlyMap = convertWeatherHourlyFromDTOToListHourlyWeather(hourlyWeather.value, selectedDay)
-        }
-        if (selectedDay > 2 && nextSevenDaysWeather != null) {
-            newDailyWeather = convertWeatherNextDaysDTOToListDailyWeather(nextSevenDaysWeather!!)
+        if (selectedDay < 7) {
+            weatherTodayViewModel.updateUiWeatherToday(selectedDay, hourlyWeather)
+        } else {
+            weatherTodayViewModel.updateUiWeatherToday(selectedDay, hourlyWeather)
         }
     }
 
-    Column() {
+    Column(modifier = modifier) {
         Spacer(modifier = Modifier.size(28.dp))
-        if (todayWeather != null) {
+        if (!currentWeather.isError && !currentWeather.isLoading) {
             Column() {
                 WeatherMainContent(
                     modifier = Modifier,
-                    todayWeather.value.currentWeatherUiData,
-                    weatherTodayDTO = newHourlyMap,
+                    currentWeather.currentWeatherUiData,
+                    weatherTodayUiState = weatherTodayUiState,
                 ) { days ->
-                    selectedDay = days
+                    weatherCurrentViewModel.changeDays(selectedDays = days)
                 }
                 if (selectedDay < 2) {
                     MapLibreMapView(
@@ -154,19 +87,31 @@ fun WeatherCurrentScreen(
                         apiKey = apiKey
                     )
                 } else {
-                    WeatherRowScreen(newDailyWeather = newDailyWeather)
+                    WeatherRowScreen(newDailyWeather = nextDaysWeather.nextDays)
                 }
             }
         } else {
-            Spacer(
-                modifier = Modifier.size(8.dp)
-            )
-            Text(
-                modifier = Modifier.padding(start = 15.dp),
-                text = "Loading....",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
+            if (currentWeather.isLoading) {
+                Spacer(
+                    modifier = Modifier.size(8.dp)
+                )
+                Text(
+                    modifier = Modifier.padding(start = 15.dp),
+                    text = "Loading....",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            } else {
+                Spacer(
+                    modifier = Modifier.size(8.dp)
+                )
+                Text(
+                    modifier = Modifier.padding(start = 15.dp),
+                    text = currentWeather.errorMessage,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
         }
     }
 }
@@ -175,7 +120,7 @@ fun WeatherCurrentScreen(
 private fun WeatherMainContent(
     modifier: Modifier = Modifier,
     cityCurrentWeatherUiData: CurrentWeatherUiData,
-    weatherTodayDTO: List<HourlyWeatherUiData>,
+    weatherTodayUiState: WeatherTodayUiState,
     onClick: (Int) -> Unit,
 ) {
     Column(modifier = modifier.padding(10.dp)) {
@@ -318,7 +263,7 @@ private fun WeatherMainContent(
             )
         }
         Spacer(modifier = Modifier.size(6.dp))
-        WeatherTodayScreen(weatherTodayDTO = weatherTodayDTO)
+        WeatherTodayScreen(weatherTodayUiState = weatherTodayUiState)
     }
 }
 
@@ -498,10 +443,13 @@ private fun ClimatePreview() {
             )
             delay(500)
         }
+        val weatherTodayUiState = WeatherTodayUiState(
+            hourlyWeather = hourlyWeatherUiData
+        )
         WeatherMainContent(
             modifier = Modifier,
             stuttgart,
-            weatherTodayDTO = hourlyWeatherUiData
+            weatherTodayUiState = weatherTodayUiState
         ) { it ->
             println(it)
         }

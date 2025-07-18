@@ -15,10 +15,21 @@ import retrofit2.Response
 class WeatherTodayViewModel(
     weatherTodayService: WeatherTodayService
 ) : ViewModel() {
-
-
     private val _uiWeatherToday = MutableStateFlow<WeatherTodayUiState>(WeatherTodayUiState())
     val uiWeatherToday: StateFlow<WeatherTodayUiState> = _uiWeatherToday
+
+    fun updateUiWeatherToday(selectedDay: Int, hourlyWeather: WeatherTodayDTO.Hourly) {
+        _uiWeatherToday.value = _uiWeatherToday.value.copy(
+            hourlyWeather = convertWeatherHourlyFromDTOToListHourlyWeather(
+                hourlyWeather,
+                selectedDay
+            ),
+            isLoading = false,
+            isError = false,
+            errorMessage = ""
+        )
+    }
+
 
     init {
         _uiWeatherToday.value = _uiWeatherToday.value.copy(
@@ -27,7 +38,8 @@ class WeatherTodayViewModel(
             isError = false,
             errorMessage = ""
         )
-        val callWeatherToday = weatherTodayService.getTodayWeather(-23.78f, -46.69f)
+        val callWeatherToday =
+            weatherTodayService.getTodayWeather(-23.78f, -46.69f, forecastDays = 1)
         callWeatherToday.enqueue(object : Callback<WeatherTodayDTO> {
             override fun onResponse(
                 call: Call<WeatherTodayDTO?>, response: Response<WeatherTodayDTO?>
@@ -73,5 +85,10 @@ class WeatherTodayViewModel(
                 )
             }
         })
+    }
+
+
+    companion object {
+
     }
 }
