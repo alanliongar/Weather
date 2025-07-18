@@ -2,8 +2,8 @@ package com.example.weather.common
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import com.example.weather.common.data.model.HourlyWeather
-import com.example.weather.current.data.model.CurrentWeatherInfo
+import com.example.weather.common.data.model.HourlyWeatherUiData
+import com.example.weather.current.data.model.CurrentWeatherUiData
 import com.example.weather.nextdays.data.model.DailyWeather
 import com.example.weather.nextdays.data.model.WeatherNextDaysDTO
 import com.example.weather.today.data.model.WeatherTodayDTO
@@ -122,32 +122,32 @@ fun getWeatherDescription(weatherCode: Int): String {
     }
 }
 
-fun convertWeatherTodayDTOToListHourlyWeather(
-    weatherTodayDTO: WeatherTodayDTO, days: Int = 0
-): List<HourlyWeather> {
-    val hourlyMap: List<HourlyWeather>
+fun convertWeatherHourlyFromDTOToListHourlyWeather(
+    weatherHourly: WeatherTodayDTO.Hourly, days: Int = 0
+): List<HourlyWeatherUiData> {
+    val hourlyMap: List<HourlyWeatherUiData>
     if (days == 0) {
-        hourlyMap = weatherTodayDTO.hourly.time.indices.mapNotNull { index ->
-            if (getHour(weatherTodayDTO.hourly.time[index]) >= getHour(weatherTodayDTO.current.time) && getDay(
-                    weatherTodayDTO.hourly.time[index]
-                ) == getDay(weatherTodayDTO.current.time) + days
+        hourlyMap = weatherHourly.time.indices.mapNotNull { index ->
+            if (getHour(weatherHourly.time[index]) >= getHour(weatherHourly.time[0]) && getDay(
+                    weatherHourly.time[index]
+                ) == getDay(weatherHourly.time[0]) + days
             ) {
-                HourlyWeather(
-                    time = weatherTodayDTO.hourly.time[index],
-                    temperature = weatherTodayDTO.hourly.temperature[index],
-                    weatherCode = weatherTodayDTO.hourly.weatherCode[index]
+                HourlyWeatherUiData(
+                    time = weatherHourly.time[index],
+                    temperature = weatherHourly.temperature[index],
+                    weatherCode = weatherHourly.weatherCode[index]
                 )
             } else {
                 null
             }
         }
     } else {
-        hourlyMap = weatherTodayDTO.hourly.time.indices.mapNotNull { index ->
-            if (getDay(weatherTodayDTO.hourly.time[index]) == getDay(weatherTodayDTO.current.time) + days) {
-                HourlyWeather(
-                    time = weatherTodayDTO.hourly.time[index],
-                    temperature = weatherTodayDTO.hourly.temperature[index],
-                    weatherCode = weatherTodayDTO.hourly.weatherCode[index]
+        hourlyMap = weatherHourly.time.indices.mapNotNull { index ->
+            if (getDay(weatherHourly.time[index]) == getDay(weatherHourly.time[0]) + days) {
+                HourlyWeatherUiData(
+                    time = weatherHourly.time[index],
+                    temperature = weatherHourly.temperature[index],
+                    weatherCode = weatherHourly.weatherCode[index]
                 )
             } else {
                 null
@@ -172,14 +172,14 @@ fun convertWeatherNextDaysDTOToListDailyWeather(
     return converted
 }
 
-fun convertWTDTOToCWInfo(weatherTodayDTO: WeatherTodayDTO?): CurrentWeatherInfo {
-    return CurrentWeatherInfo(
+fun convertWTDTOToCWInfo(weatherTodayDTO: WeatherTodayDTO.Current?): CurrentWeatherUiData {
+    return CurrentWeatherUiData(
         "Sao Paulo",
-        weatherTodayDTO?.current?.weather ?: 0,
-        weatherTodayDTO?.current?.temperature ?: 0f,
-        weatherTodayDTO?.current?.wind ?: 0f,
-        weatherTodayDTO?.current?.humidity ?: 0,
-        weatherTodayDTO?.current?.rain ?: 0f,
-        weatherTodayDTO?.current?.time ?: "Error"
+        weatherTodayDTO?.weather ?: 0,
+        weatherTodayDTO?.temperature ?: 0f,
+        weatherTodayDTO?.wind ?: 0f,
+        weatherTodayDTO?.humidity ?: 0,
+        weatherTodayDTO?.rain ?: 0f,
+        weatherTodayDTO?.time ?: "Error"
     )
 }

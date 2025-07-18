@@ -14,7 +14,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.weather.common.data.model.HourlyWeather
+import com.example.weather.common.data.model.HourlyWeatherUiData
 import com.example.weather.common.formatToHourPeriod
 import com.example.weather.common.getWeatherEmoji
 import com.example.weather.today.data.model.WeatherTodayDTO
@@ -25,7 +25,7 @@ import java.util.Locale
 @Composable
 fun WeatherTodayScreen(
     modifier: Modifier = Modifier,
-    weatherTodayDTO: List<HourlyWeather>
+    weatherTodayDTO: List<HourlyWeatherUiData>
 ) {
     WeatherTodayContent(weatherTodayDTO = weatherTodayDTO)
 }
@@ -33,7 +33,7 @@ fun WeatherTodayScreen(
 @Composable
 private fun WeatherTodayContent(
     modifier: Modifier = Modifier,
-    weatherTodayDTO: List<HourlyWeather>
+    weatherTodayDTO: List<HourlyWeatherUiData>
     ) {
     LazyRow {
         items(weatherTodayDTO) { dayWeather ->

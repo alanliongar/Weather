@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,15 +33,15 @@ import com.example.weather.today.data.remote.WeatherTodayService
 import com.example.weather.apiKey
 import com.example.weather.common.presentation.ui.MapLibreMapView
 import com.example.weather.common.data.remote.WeatherRetrofitClient
-import com.example.weather.common.convertWTDTOToCWInfo
 import com.example.weather.common.convertWeatherNextDaysDTOToListDailyWeather
-import com.example.weather.common.convertWeatherTodayDTOToListHourlyWeather
+import com.example.weather.common.convertWeatherHourlyFromDTOToListHourlyWeather
 import com.example.weather.common.formatToFullDate
 import com.example.weather.common.getWeatherDescription
 import com.example.weather.common.getWeatherEmoji
 import com.example.weather.nextdays.data.model.DailyWeather
-import com.example.weather.common.data.model.HourlyWeather
-import com.example.weather.current.data.model.CurrentWeatherInfo
+import com.example.weather.common.data.model.HourlyWeatherUiData
+import com.example.weather.current.data.model.CurrentWeatherUiData
+import com.example.weather.current.presentation.WeatherCurrentViewModel
 import com.example.weather.ui.theme.WeatherTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -49,13 +50,19 @@ import retrofit2.Callback
 import retrofit2.Response
 
 @Composable
-fun WeatherCurrentScreen(modifier: Modifier = Modifier) {
+fun WeatherCurrentScreen(
+    modifier: Modifier = Modifier,
+    weatherCurrentViewModel: WeatherCurrentViewModel,
+) {
     var selectedDay by remember { mutableStateOf<Int>(0) }
-    var todayWeather by remember { mutableStateOf<WeatherTodayDTO?>(null) }
+
+    val todayWeather = weatherCurrentViewModel.uiCurrentWeather.collectAsState()
+    val hourlyWeather = weatherCurrentViewModel.uiHourlyWeather.collectAsState()
+
     var nextSevenDaysWeather by remember { mutableStateOf<WeatherNextDaysDTO?>(null) }
 
     var newHourlyMap by remember {
-        mutableStateOf<List<HourlyWeather>>(emptyList())
+        mutableStateOf<List<HourlyWeatherUiData>>(emptyList())
     }
 
     var newDailyWeather by remember {
@@ -69,6 +76,7 @@ fun WeatherCurrentScreen(modifier: Modifier = Modifier) {
     )
 
     val callWeatherNextDaysService = weatherNextDaysService.getNextDaysWeather(-23.78f, -46.69f)
+
     callWeatherNextDaysService.enqueue(object : Callback<WeatherNextDaysDTO> {
         override fun onResponse(
             call: Call<WeatherNextDaysDTO?>, response: Response<WeatherNextDaysDTO?>
@@ -103,8 +111,7 @@ fun WeatherCurrentScreen(modifier: Modifier = Modifier) {
             if (response.isSuccessful) {
                 val weather = response.body()
                 if (weather != null) {
-                    todayWeather = weather
-                    newHourlyMap = convertWeatherTodayDTOToListHourlyWeather(weather, selectedDay)
+                    newHourlyMap = convertWeatherHourlyFromDTOToListHourlyWeather(hourlyWeather.value, selectedDay)
                 } else {
                     Log.d("MainActivity", "Request Error :: Empty response")
                 }
@@ -116,10 +123,11 @@ fun WeatherCurrentScreen(modifier: Modifier = Modifier) {
         override fun onFailure(call: Call<WeatherTodayDTO>, t: Throwable) {
             Log.d("MainActivity", "Network Error :: ${t.message}")
         }
+
     })
     LaunchedEffect(selectedDay) {
         if (todayWeather != null) {
-            newHourlyMap = convertWeatherTodayDTOToListHourlyWeather(todayWeather!!, selectedDay)
+            newHourlyMap = convertWeatherHourlyFromDTOToListHourlyWeather(hourlyWeather.value, selectedDay)
         }
         if (selectedDay > 2 && nextSevenDaysWeather != null) {
             newDailyWeather = convertWeatherNextDaysDTOToListDailyWeather(nextSevenDaysWeather!!)
@@ -132,7 +140,7 @@ fun WeatherCurrentScreen(modifier: Modifier = Modifier) {
             Column() {
                 WeatherMainContent(
                     modifier = Modifier,
-                    convertWTDTOToCWInfo(todayWeather),
+                    todayWeather.value.currentWeatherUiData,
                     weatherTodayDTO = newHourlyMap,
                 ) { days ->
                     selectedDay = days
@@ -150,7 +158,9 @@ fun WeatherCurrentScreen(modifier: Modifier = Modifier) {
                 }
             }
         } else {
-            Spacer(modifier = Modifier.size(8.dp))
+            Spacer(
+                modifier = Modifier.size(8.dp)
+            )
             Text(
                 modifier = Modifier.padding(start = 15.dp),
                 text = "Loading....",
@@ -164,11 +174,10 @@ fun WeatherCurrentScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun WeatherMainContent(
     modifier: Modifier = Modifier,
-    cityCurrentWeatherInfo: CurrentWeatherInfo,
-    weatherTodayDTO: List<HourlyWeather>,
+    cityCurrentWeatherUiData: CurrentWeatherUiData,
+    weatherTodayDTO: List<HourlyWeatherUiData>,
     onClick: (Int) -> Unit,
-
-    ) {
+) {
     Column(modifier = modifier.padding(10.dp)) {
         Row(modifier = modifier.fillMaxWidth()) {
             Column(
@@ -180,13 +189,13 @@ private fun WeatherMainContent(
                     modifier = modifier.align(Alignment.Start),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.SemiBold,
-                    text = cityCurrentWeatherInfo.city
+                    text = cityCurrentWeatherUiData.city
                 )
                 Text(
                     modifier = modifier.align(Alignment.Start),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    text = formatToFullDate(cityCurrentWeatherInfo.date)
+                    text = formatToFullDate(cityCurrentWeatherUiData.date)
                 )
             }
         }
@@ -203,16 +212,16 @@ private fun WeatherMainContent(
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = cityCurrentWeatherInfo.temperature.toString() + "°", fontSize = 60.sp
+                    text = cityCurrentWeatherUiData.temperature.toString() + "°", fontSize = 60.sp
                 )
                 Text(
-                    text = getWeatherDescription(cityCurrentWeatherInfo.weatherCode),
+                    text = getWeatherDescription(cityCurrentWeatherUiData.weatherCode),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
             Text(
-                text = getWeatherEmoji(weatherCode = cityCurrentWeatherInfo.weatherCode),
+                text = getWeatherEmoji(weatherCode = cityCurrentWeatherUiData.weatherCode),
                 fontSize = 90.sp,
                 modifier = modifier,
                 textAlign = TextAlign.Center
@@ -234,7 +243,7 @@ private fun WeatherMainContent(
                 Spacer(modifier = Modifier.size(4.dp))
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = cityCurrentWeatherInfo.windSpeed.toString() + " m/s",
+                    text = cityCurrentWeatherUiData.windSpeed.toString() + " m/s",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp
                 )
@@ -255,7 +264,7 @@ private fun WeatherMainContent(
                 Spacer(modifier = Modifier.size(4.dp))
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = cityCurrentWeatherInfo.humidity.toString() + "%",
+                    text = cityCurrentWeatherUiData.humidity.toString() + "%",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp
                 )
@@ -276,7 +285,7 @@ private fun WeatherMainContent(
                 Spacer(modifier = Modifier.size(4.dp))
                 Text(
                     modifier = modifier.align(Alignment.CenterHorizontally),
-                    text = String.format("%.0f", cityCurrentWeatherInfo.rain * 100) + "%",
+                    text = String.format("%.0f", cityCurrentWeatherUiData.rain * 100) + "%",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp
                 )
@@ -316,7 +325,7 @@ private fun WeatherMainContent(
 @Preview(showBackground = true)
 @Composable
 private fun ClimatePreview() {
-    val stuttgart: CurrentWeatherInfo = CurrentWeatherInfo(
+    val stuttgart: CurrentWeatherUiData = CurrentWeatherUiData(
         "Sao Paulo", 2, 18f, 10f, 98, 1.0f, "2021-09-12T10:00"
     )
     val weatherSaoPauloToday = WeatherTodayDTO(
@@ -482,17 +491,17 @@ private fun ClimatePreview() {
         )
     )
     WeatherTheme {
-        var hourlyWeather: List<HourlyWeather>
+        var hourlyWeatherUiData: List<HourlyWeatherUiData>
         runBlocking {
-            hourlyWeather = convertWeatherTodayDTOToListHourlyWeather(
-                weatherSaoPauloToday
+            hourlyWeatherUiData = convertWeatherHourlyFromDTOToListHourlyWeather(
+                weatherSaoPauloToday.hourly
             )
             delay(500)
         }
         WeatherMainContent(
             modifier = Modifier,
             stuttgart,
-            weatherTodayDTO = hourlyWeather
+            weatherTodayDTO = hourlyWeatherUiData
         ) { it ->
             println(it)
         }
