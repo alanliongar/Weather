@@ -37,12 +37,12 @@ class WeatherCurrentViewModel(
             isLoading = true
         )
         viewModelScope.launch(Dispatchers.IO) {
-            val response = weatherCurrentService.getCurrentWeatherData(
-                -23.78f,
-                -46.69f,
-                forecastDays = _selectedDays.value
-            )
-            if (response.isSuccessful) {
+            try {
+                val response = weatherCurrentService.getCurrentWeatherData(
+                    -23.78f,
+                    -46.69f,
+                    forecastDays = _selectedDays.value
+                )
                 val weather = response.body()
                 if (weather != null) {
                     _uiCurrentWeather.value = _uiCurrentWeather.value.copy(
@@ -68,12 +68,12 @@ class WeatherCurrentViewModel(
                             errorMessage = "Request Error :: Empty response"
                         )
                 }
-            } else {
-                Log.d("WeatherCurrentViewModel", "Request Error :: ${response.errorBody()}")
+            } catch (ex: Exception) {
+                Log.d("WeatherCurrentViewModel", "Network Error :: ${ex.message}")
                 _uiCurrentWeather.value =
                     CurrentWeatherUiState(
                         isError = true,
-                        errorMessage = "Request Error :: ${response.errorBody()}"
+                        errorMessage = "Network Error :: ${ex.message}"
                     )
             }
         }

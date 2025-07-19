@@ -11,6 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,9 +40,21 @@ private fun WeatherTodayContent(
     weatherTodayUiState: WeatherTodayUiState,
 ) {
     if (weatherTodayUiState.isLoading) {
-        Text("Loading....")
+        Text(
+            modifier = Modifier.padding(start = 15.dp),
+            text = "Loading....",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.Green,
+        )
     } else if (weatherTodayUiState.isError) {
-        Text(weatherTodayUiState.errorMessage)
+        Text(
+            modifier = Modifier.padding(start = 15.dp),
+            text = weatherTodayUiState.errorMessage,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.Red,
+        )
     } else {
         LazyRow {
             items(weatherTodayUiState.hourlyWeather) { dayWeather ->

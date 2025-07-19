@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,6 +33,7 @@ import com.example.weather.common.data.remote.WeatherRetrofitClient
 import com.example.weather.current.data.model.CurrentWeatherUiData
 import com.example.weather.current.presentation.WeatherCurrentViewModel
 import com.example.weather.nextdays.presentation.WeatherNextDaysViewModel
+import com.example.weather.today.WeatherTodayRepository
 import com.example.weather.today.data.remote.WeatherTodayService
 import com.example.weather.today.presentation.WeatherTodayViewModel
 import com.example.weather.ui.theme.WeatherTheme
@@ -63,6 +65,7 @@ fun WeatherCurrentScreen(
                 text = "Loading....",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.SemiBold,
+                color = Color.Green,
             )
         } else if (currentWeather.isError) {
             Spacer(
@@ -71,8 +74,9 @@ fun WeatherCurrentScreen(
             Text(
                 modifier = Modifier.padding(start = 15.dp),
                 text = currentWeather.errorMessage,
-                fontSize = 28.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
+                color = Color.Red,
             )
         } else {
             Column() {
@@ -429,8 +433,9 @@ private fun ClimatePreview() {
     WeatherTheme {
         val weatherTodayService: WeatherTodayService =
             WeatherRetrofitClient.retrofitInstance.create(WeatherTodayService::class.java)
-
-        val weatherTodayViewModel = WeatherTodayViewModel(weatherTodayService)
+        val weatherTodayRepository: WeatherTodayRepository =
+            WeatherTodayRepository(weatherTodayService)
+        val weatherTodayViewModel = WeatherTodayViewModel(weatherTodayRepository)
 
 
         WeatherMainContent(

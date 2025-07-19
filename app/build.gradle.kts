@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.kapt")
     kotlin("plugin.serialization") version "2.0.0"
 }
 
@@ -72,6 +73,13 @@ dependencies {
     implementation("androidx.preference:preference:1.2.1")
     implementation("org.maplibre.gl:android-sdk:11.11.0")
     implementation("org.maplibre.gl:android-sdk-turf:6.0.1")
+
+    val room_version = "2.8.0-alpha01"
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+    implementation("androidx.room:room-guava:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
 
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.androidx.core.ktx)

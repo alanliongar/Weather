@@ -18,6 +18,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,9 +48,21 @@ private fun WeatherNextDaysRowsContent(
     weatherNextDaysUiState: WeatherNextDaysUiState
 ) {
     if (weatherNextDaysUiState.isLoading) {
-        Text("Loading....")
+        Text(
+            modifier = Modifier.padding(start = 15.dp),
+            text = "Loading....",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.Green,
+        )
     } else if (weatherNextDaysUiState.isError) {
-        Text(weatherNextDaysUiState.errorMessage)
+        Text(
+            modifier = Modifier.padding(start = 15.dp),
+            text = weatherNextDaysUiState.errorMessage,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.Red,
+        )
     } else {
         LazyColumn() {
             items(weatherNextDaysUiState.nextDays) { forecast ->

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.weather.common.convertWeatherHourlyFromDTOToListHourlyWeather
 import com.example.weather.common.data.remote.WeatherRetrofitClient
+import com.example.weather.today.WeatherTodayRepository
 import com.example.weather.today.data.remote.WeatherTodayService
 import com.example.weather.today.presentation.ui.WeatherTodayUiState
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +18,7 @@ import kotlinx.coroutines.launch
 
 
 class WeatherTodayViewModel(
-    private val weatherTodayService: WeatherTodayService
+    private val weatherTodayRepository: WeatherTodayRepository
 ) : ViewModel() {
     private val _uiWeatherToday = MutableStateFlow<WeatherTodayUiState>(WeatherTodayUiState())
     val uiWeatherToday: StateFlow<WeatherTodayUiState> = _uiWeatherToday
@@ -29,31 +30,34 @@ class WeatherTodayViewModel(
     fun fetchWeatherTodayData(
         selectedDay: Int
     ) {
-        _uiWeatherToday.value = _uiWeatherToday.value.copy(
-            hourlyWeather = emptyList(),
-            isLoading = true,
-            isError = false,
-            errorMessage = ""
-        )
+        _uiWeatherToday.value = WeatherTodayUiState(isLoading = true)
         viewModelScope.launch(Dispatchers.IO) {
-            val response = weatherTodayService.getTodayWeather(-23.78f, -46.69f, forecastDays = 2)
-            if (response.body() != null) {
-                val weatherToday = response.body()!!
-                _uiWeatherToday.value = _uiWeatherToday.value.copy(
-                    hourlyWeather = convertWeatherHourlyFromDTOToListHourlyWeather(
-                        weatherToday.hourly, days = selectedDay
-                    ), isLoading = false, isError = false, errorMessage = ""
-                )
-                val pagodin = convertWeatherHourlyFromDTOToListHourlyWeather(
-                    weatherToday.hourly, days = 1
-                )
+            val result =
+                weatherTodayRepository.getWeatherToday(-23.78f, -46.69f, forecastDays = selectedDay)
+            if (result.isSuccess) {
+                if (result.getOrNull() != null) {
+                    val weatherToday = result.getOrNull()!!
+                    _uiWeatherToday.value = WeatherTodayUiState(
+                        hourlyWeather = convertWeatherHourlyFromDTOToListHourlyWeather(
+                            weatherToday.hourly, days = selectedDay
+                        ), isLoading = false, isError = false, errorMessage = ""
+                    )
+                } else {
+                    Log.d("WeatherTodayViewModel", "Requisition error :: Empty response")
+                    _uiWeatherToday.value = WeatherTodayUiState(
+                        hourlyWeather = emptyList(),
+                        isLoading = false,
+                        isError = true,
+                        errorMessage = result.exceptionOrNull()?.message ?: "Empty server result"
+                    )
+                }
             } else {
                 Log.d("WeatherTodayViewModel", "Requisition error :: Empty response")
-                _uiWeatherToday.value = _uiWeatherToday.value.copy(
+                _uiWeatherToday.value = WeatherTodayUiState(
                     hourlyWeather = emptyList(),
-                    isLoading = true,
-                    isError = false,
-                    errorMessage = ""
+                    isLoading = false,
+                    isError = true,
+                    errorMessage = result.exceptionOrNull()?.message ?: "Unknown Error"
                 )
             }
         }
@@ -65,7 +69,9 @@ class WeatherTodayViewModel(
             override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
                 val weatherTodayService =
                     WeatherRetrofitClient.retrofitInstance.create(WeatherTodayService::class.java)
-                return WeatherTodayViewModel(weatherTodayService) as T
+                val weatherTodayRepository: WeatherTodayRepository =
+                    WeatherTodayRepository(weatherTodayService)
+                return WeatherTodayViewModel(weatherTodayRepository) as T
             }
         }
     }
