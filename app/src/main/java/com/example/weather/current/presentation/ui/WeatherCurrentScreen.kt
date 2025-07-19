@@ -8,15 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -24,7 +20,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.weather.nextdays.data.model.WeatherNextDaysDTO
 import com.example.weather.nextdays.presentation.ui.WeatherRowScreen
 import com.example.weather.today.data.model.WeatherTodayDTO
 import com.example.weather.today.presentation.ui.WeatherTodayScreen
@@ -53,17 +48,16 @@ fun WeatherCurrentScreen(
 ) {
     val selectedDay by weatherCurrentViewModel.selectedDays.collectAsState()
     val currentWeather by weatherCurrentViewModel.uiCurrentWeather.collectAsState()
-    val hourlyWeather by weatherCurrentViewModel.uiHourlyWeather.collectAsState()
+
     val weatherTodayUiState by weatherTodayViewModel.uiWeatherToday.collectAsState()
+    //Esse cara aqui que tá populando os cards
+
     val nextDaysWeather by weatherNextDaysViewModel.uiWeatherNextDaysUiState.collectAsState()
-    val nextSevenDaysWeather by remember { mutableStateOf<WeatherNextDaysDTO?>(null) }
 
 
     LaunchedEffect(selectedDay) {
         if (selectedDay < 7) {
-            weatherTodayViewModel.updateUiWeatherToday(selectedDay, hourlyWeather)
-        } else {
-            weatherTodayViewModel.updateUiWeatherToday(selectedDay, hourlyWeather)
+            weatherTodayViewModel.updateUiWeatherToday(selectedDay)
         }
     }
 
@@ -74,11 +68,12 @@ fun WeatherCurrentScreen(
                 WeatherMainContent(
                     modifier = Modifier,
                     currentWeather.currentWeatherUiData,
+                    selectedDays = selectedDay,
                     weatherTodayUiState = weatherTodayUiState,
                 ) { days ->
                     weatherCurrentViewModel.changeDays(selectedDays = days)
                 }
-                if (selectedDay < 2) {
+                if (selectedDay < 3) {
                     MapLibreMapView(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -121,6 +116,7 @@ private fun WeatherMainContent(
     modifier: Modifier = Modifier,
     cityCurrentWeatherUiData: CurrentWeatherUiData,
     weatherTodayUiState: WeatherTodayUiState,
+    selectedDays: Int,
     onClick: (Int) -> Unit,
 ) {
     Column(modifier = modifier.padding(10.dp)) {
@@ -246,13 +242,13 @@ private fun WeatherMainContent(
         Row(modifier = modifier) {
             Text(
                 modifier = Modifier.clickable {
-                    onClick.invoke(0)
+                    onClick.invoke(1)
                 }, text = "Today", fontSize = 18.sp, fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = modifier.size(18.dp))
             Text(
                 modifier = Modifier.clickable {
-                    onClick.invoke(1)
+                    onClick.invoke(2)
                 }, text = "Tomorrow", fontSize = 18.sp, fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = modifier.size(18.dp))
@@ -262,8 +258,10 @@ private fun WeatherMainContent(
                 }, text = "Next 7 days", fontSize = 18.sp, fontWeight = FontWeight.SemiBold
             )
         }
-        Spacer(modifier = Modifier.size(6.dp))
-        WeatherTodayScreen(weatherTodayUiState = weatherTodayUiState)
+        if (selectedDays < 7) {
+            Spacer(modifier = Modifier.size(6.dp))
+            WeatherTodayScreen(weatherTodayUiState = weatherTodayUiState)
+        }
     }
 }
 
@@ -449,6 +447,7 @@ private fun ClimatePreview() {
         WeatherMainContent(
             modifier = Modifier,
             stuttgart,
+            selectedDays = 1,
             weatherTodayUiState = weatherTodayUiState
         ) { it ->
             println(it)

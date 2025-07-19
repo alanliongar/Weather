@@ -1,6 +1,7 @@
 package com.example.weather.today.presentation
 
 import android.util.Log
+
 import androidx.lifecycle.ViewModel
 import com.example.weather.common.convertWeatherHourlyFromDTOToListHourlyWeather
 import com.example.weather.today.data.model.WeatherTodayDTO
@@ -13,25 +14,18 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class WeatherTodayViewModel(
-    weatherTodayService: WeatherTodayService
+    private val weatherTodayService: WeatherTodayService
 ) : ViewModel() {
     private val _uiWeatherToday = MutableStateFlow<WeatherTodayUiState>(WeatherTodayUiState())
     val uiWeatherToday: StateFlow<WeatherTodayUiState> = _uiWeatherToday
 
-    fun updateUiWeatherToday(selectedDay: Int, hourlyWeather: WeatherTodayDTO.Hourly) {
-        _uiWeatherToday.value = _uiWeatherToday.value.copy(
-            hourlyWeather = convertWeatherHourlyFromDTOToListHourlyWeather(
-                hourlyWeather,
-                selectedDay
-            ),
-            isLoading = false,
-            isError = false,
-            errorMessage = ""
-        )
+    init {
+        updateUiWeatherToday(2)
     }
 
-
-    init {
+    fun updateUiWeatherToday(
+        selectedDay: Int
+    ) {
         _uiWeatherToday.value = _uiWeatherToday.value.copy(
             hourlyWeather = emptyList(),
             isLoading = true,
@@ -39,7 +33,7 @@ class WeatherTodayViewModel(
             errorMessage = ""
         )
         val callWeatherToday =
-            weatherTodayService.getTodayWeather(-23.78f, -46.69f, forecastDays = 1)
+            weatherTodayService.getTodayWeather(-23.78f, -46.69f, forecastDays = 2)
         callWeatherToday.enqueue(object : Callback<WeatherTodayDTO> {
             override fun onResponse(
                 call: Call<WeatherTodayDTO?>, response: Response<WeatherTodayDTO?>
@@ -49,8 +43,11 @@ class WeatherTodayViewModel(
                         val weatherToday = response.body()!!
                         _uiWeatherToday.value = _uiWeatherToday.value.copy(
                             hourlyWeather = convertWeatherHourlyFromDTOToListHourlyWeather(
-                                weatherToday.hourly
+                                weatherToday.hourly, days = selectedDay
                             ), isLoading = false, isError = false, errorMessage = ""
+                        )
+                        val pagodin = convertWeatherHourlyFromDTOToListHourlyWeather(
+                            weatherToday.hourly, days = 1
                         )
                     } else {
                         Log.d("WeatherTodayViewModel", "Requisition error :: Empty response")

@@ -11,9 +11,11 @@ import java.util.*
 import java.time.*
 import java.time.format.*
 
-
 fun main() {
-    println(getBarSize(0, 22))
+    val now = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+    val formatted = now.format(formatter)
+    println(getHour(formatted))
 }
 
 fun getBarSize(tempMin: Int, tempMax: Int): Pair<Float, Float> {
@@ -122,15 +124,20 @@ fun getWeatherDescription(weatherCode: Int): String {
     }
 }
 
+
 fun convertWeatherHourlyFromDTOToListHourlyWeather(
-    weatherHourly: WeatherTodayDTO.Hourly, days: Int = 0
+    weatherHourly: WeatherTodayDTO.Hourly, days: Int = 1
 ): List<HourlyWeatherUiData> {
+    val zoneId = ZoneId.of("America/Sao_Paulo")
+    val now = ZonedDateTime.now(zoneId).toLocalDateTime()
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+    val formattedDate = now.format(formatter)
     val hourlyMap: List<HourlyWeatherUiData>
-    if (days == 0) {
+    if (days == 1) {
         hourlyMap = weatherHourly.time.indices.mapNotNull { index ->
-            if (getHour(weatherHourly.time[index]) >= getHour(weatherHourly.time[0]) && getDay(
+            if (getHour(weatherHourly.time[index]) >= getHour(formattedDate) && getDay(
                     weatherHourly.time[index]
-                ) == getDay(weatherHourly.time[0]) + days
+                ) == getDay(formattedDate)
             ) {
                 HourlyWeatherUiData(
                     time = weatherHourly.time[index],
@@ -143,7 +150,7 @@ fun convertWeatherHourlyFromDTOToListHourlyWeather(
         }
     } else {
         hourlyMap = weatherHourly.time.indices.mapNotNull { index ->
-            if (getDay(weatherHourly.time[index]) == getDay(weatherHourly.time[0]) + days) {
+            if (getDay(weatherHourly.time[index]) == getDay(formattedDate) + days - 1) {
                 HourlyWeatherUiData(
                     time = weatherHourly.time[index],
                     temperature = weatherHourly.temperature[index],

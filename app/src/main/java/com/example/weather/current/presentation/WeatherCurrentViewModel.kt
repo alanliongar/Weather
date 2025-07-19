@@ -26,14 +26,7 @@ class WeatherCurrentViewModel(
     private val _uiCurrentWeather = MutableStateFlow<CurrentWeatherUiState>(CurrentWeatherUiState())
     val uiCurrentWeather: StateFlow<CurrentWeatherUiState> = _uiCurrentWeather
 
-    private val _uiHourlyWeather = MutableStateFlow<WeatherTodayDTO.Hourly>(
-        WeatherTodayDTO.Hourly(
-            emptyList(),
-            emptyList(),
-            emptyList()
-        )
-    )
-    val uiHourlyWeather: StateFlow<WeatherTodayDTO.Hourly> = _uiHourlyWeather
+
 
 
     init {
@@ -52,7 +45,6 @@ class WeatherCurrentViewModel(
                 if (response.isSuccessful) {
                     val weather = response.body()
                     if (weather != null) {
-                        _uiHourlyWeather.value = weather.hourly
                         _uiCurrentWeather.value = _uiCurrentWeather.value.copy(
                             currentWeatherUiData =
                                 CurrentWeatherUiData(

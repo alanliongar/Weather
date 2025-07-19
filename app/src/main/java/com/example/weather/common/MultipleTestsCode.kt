@@ -1,5 +1,8 @@
 package com.example.weather.common
 
-fun main(){
-    
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+fun main() {
+
 }

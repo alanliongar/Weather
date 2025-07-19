@@ -2,13 +2,10 @@ package com.example.weather.nextdays.presentation
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.example.weather.common.convertWeatherHourlyFromDTOToListHourlyWeather
 import com.example.weather.common.convertWeatherNextDaysDTOToListDailyWeather
-import com.example.weather.common.data.remote.WeatherRetrofitClient
 import com.example.weather.nextdays.data.model.WeatherNextDaysDTO
 import com.example.weather.nextdays.data.remote.WeatherNextDaysService
 import com.example.weather.nextdays.presentation.ui.WeatherNextDaysUiState
-import com.example.weather.today.data.model.WeatherTodayDTO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import retrofit2.Call
