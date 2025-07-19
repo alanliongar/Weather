@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -14,10 +16,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.weather.common.data.model.HourlyWeatherUiData
 import com.example.weather.common.formatToHourPeriod
 import com.example.weather.common.getWeatherEmoji
 import com.example.weather.today.data.model.WeatherTodayDTO
+import com.example.weather.today.presentation.WeatherTodayViewModel
 import com.example.weather.ui.theme.WeatherTheme
 import java.util.Locale
 
@@ -25,17 +27,22 @@ import java.util.Locale
 @Composable
 fun WeatherTodayScreen(
     modifier: Modifier = Modifier,
-    weatherTodayUiState: WeatherTodayUiState
+    weatherTodayViewModel: WeatherTodayViewModel
 ) {
+    val weatherTodayUiState by weatherTodayViewModel.uiWeatherToday.collectAsState()
     WeatherTodayContent(weatherTodayUiState = weatherTodayUiState)
 }
 
 @Composable
 private fun WeatherTodayContent(
     modifier: Modifier = Modifier,
-    weatherTodayUiState: WeatherTodayUiState
+    weatherTodayUiState: WeatherTodayUiState,
 ) {
-    if (!weatherTodayUiState.isError && !weatherTodayUiState.isLoading) {
+    if (weatherTodayUiState.isLoading) {
+        Text("Loading....")
+    } else if (weatherTodayUiState.isError) {
+        Text(weatherTodayUiState.errorMessage)
+    } else {
         LazyRow {
             items(weatherTodayUiState.hourlyWeather) { dayWeather ->
                 WeatherHourCard(
@@ -45,12 +52,6 @@ private fun WeatherTodayContent(
                     modifier = Modifier.padding(end = 8.dp)
                 )
             }
-        }
-    } else {
-        if (weatherTodayUiState.isLoading) {
-            Text("Loading....")
-        } else {
-            Text(weatherTodayUiState.errorMessage)
         }
     }
 }

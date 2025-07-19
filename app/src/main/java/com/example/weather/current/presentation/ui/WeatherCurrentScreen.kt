@@ -20,24 +20,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.weather.nextdays.presentation.ui.WeatherRowScreen
+import com.example.weather.nextdays.presentation.ui.WeatherNextDaysRowsScreen
 import com.example.weather.today.data.model.WeatherTodayDTO
 import com.example.weather.today.presentation.ui.WeatherTodayScreen
 import com.example.weather.apiKey
 import com.example.weather.common.presentation.ui.MapLibreMapView
-import com.example.weather.common.convertWeatherHourlyFromDTOToListHourlyWeather
 import com.example.weather.common.formatToFullDate
 import com.example.weather.common.getWeatherDescription
 import com.example.weather.common.getWeatherEmoji
-import com.example.weather.common.data.model.HourlyWeatherUiData
+import com.example.weather.common.data.remote.WeatherRetrofitClient
 import com.example.weather.current.data.model.CurrentWeatherUiData
 import com.example.weather.current.presentation.WeatherCurrentViewModel
 import com.example.weather.nextdays.presentation.WeatherNextDaysViewModel
+import com.example.weather.today.data.remote.WeatherTodayService
 import com.example.weather.today.presentation.WeatherTodayViewModel
-import com.example.weather.today.presentation.ui.WeatherTodayUiState
 import com.example.weather.ui.theme.WeatherTheme
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 
 @Composable
 fun WeatherCurrentScreen(
@@ -49,12 +46,6 @@ fun WeatherCurrentScreen(
     val selectedDay by weatherCurrentViewModel.selectedDays.collectAsState()
     val currentWeather by weatherCurrentViewModel.uiCurrentWeather.collectAsState()
 
-    val weatherTodayUiState by weatherTodayViewModel.uiWeatherToday.collectAsState()
-    //Esse cara aqui que tá populando os cards
-
-    val nextDaysWeather by weatherNextDaysViewModel.uiWeatherNextDaysUiState.collectAsState()
-
-
     LaunchedEffect(selectedDay) {
         if (selectedDay < 7) {
             weatherTodayViewModel.updateUiWeatherToday(selectedDay)
@@ -63,13 +54,33 @@ fun WeatherCurrentScreen(
 
     Column(modifier = modifier) {
         Spacer(modifier = Modifier.size(28.dp))
-        if (!currentWeather.isError && !currentWeather.isLoading) {
+        if (currentWeather.isLoading) {
+            Spacer(
+                modifier = Modifier.size(8.dp)
+            )
+            Text(
+                modifier = Modifier.padding(start = 15.dp),
+                text = "Loading....",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        } else if (currentWeather.isError) {
+            Spacer(
+                modifier = Modifier.size(8.dp)
+            )
+            Text(
+                modifier = Modifier.padding(start = 15.dp),
+                text = currentWeather.errorMessage,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        } else {
             Column() {
                 WeatherMainContent(
                     modifier = Modifier,
                     currentWeather.currentWeatherUiData,
                     selectedDays = selectedDay,
-                    weatherTodayUiState = weatherTodayUiState,
+                    weatherTodayViewModel = weatherTodayViewModel,
                 ) { days ->
                     weatherCurrentViewModel.changeDays(selectedDays = days)
                 }
@@ -82,30 +93,10 @@ fun WeatherCurrentScreen(
                         apiKey = apiKey
                     )
                 } else {
-                    WeatherRowScreen(newDailyWeather = nextDaysWeather.nextDays)
+                    WeatherNextDaysRowsScreen(
+                        weatherNextDaysViewModel = weatherNextDaysViewModel
+                    )
                 }
-            }
-        } else {
-            if (currentWeather.isLoading) {
-                Spacer(
-                    modifier = Modifier.size(8.dp)
-                )
-                Text(
-                    modifier = Modifier.padding(start = 15.dp),
-                    text = "Loading....",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            } else {
-                Spacer(
-                    modifier = Modifier.size(8.dp)
-                )
-                Text(
-                    modifier = Modifier.padding(start = 15.dp),
-                    text = currentWeather.errorMessage,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
             }
         }
     }
@@ -115,7 +106,7 @@ fun WeatherCurrentScreen(
 private fun WeatherMainContent(
     modifier: Modifier = Modifier,
     cityCurrentWeatherUiData: CurrentWeatherUiData,
-    weatherTodayUiState: WeatherTodayUiState,
+    weatherTodayViewModel: WeatherTodayViewModel,
     selectedDays: Int,
     onClick: (Int) -> Unit,
 ) {
@@ -260,7 +251,9 @@ private fun WeatherMainContent(
         }
         if (selectedDays < 7) {
             Spacer(modifier = Modifier.size(6.dp))
-            WeatherTodayScreen(weatherTodayUiState = weatherTodayUiState)
+            WeatherTodayScreen(
+                weatherTodayViewModel = weatherTodayViewModel
+            )
         }
     }
 }
@@ -434,21 +427,17 @@ private fun ClimatePreview() {
         )
     )
     WeatherTheme {
-        var hourlyWeatherUiData: List<HourlyWeatherUiData>
-        runBlocking {
-            hourlyWeatherUiData = convertWeatherHourlyFromDTOToListHourlyWeather(
-                weatherSaoPauloToday.hourly
-            )
-            delay(500)
-        }
-        val weatherTodayUiState = WeatherTodayUiState(
-            hourlyWeather = hourlyWeatherUiData
-        )
+        val weatherTodayService: WeatherTodayService =
+            WeatherRetrofitClient.retrofitInstance.create(WeatherTodayService::class.java)
+
+        val weatherTodayViewModel = WeatherTodayViewModel(weatherTodayService)
+
+
         WeatherMainContent(
             modifier = Modifier,
             stuttgart,
             selectedDays = 1,
-            weatherTodayUiState = weatherTodayUiState
+            weatherTodayViewModel = weatherTodayViewModel
         ) { it ->
             println(it)
         }

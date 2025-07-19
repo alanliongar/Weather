@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -25,6 +26,10 @@ import org.maplibre.android.WellKnownTileServer
 const val apiKey = BuildConfig.API_KEY
 
 class MainActivity : ComponentActivity() {
+    val weatherTodayViewModel by viewModels<WeatherTodayViewModel> { WeatherTodayViewModel.Factory }
+    val weatherCurrentViewModel by viewModels<WeatherCurrentViewModel> { WeatherCurrentViewModel.Factory }
+    val weatherNextDaysViewModel by viewModels<WeatherNextDaysViewModel> { WeatherNextDaysViewModel.Factory }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -40,20 +45,6 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val weatherTodayService: WeatherTodayService =
-                        WeatherRetrofitClient.retrofitInstance.create(WeatherTodayService::class.java)
-                    val weatherNextDaysService =
-                        WeatherRetrofitClient.retrofitInstance.create(WeatherNextDaysService::class.java)
-                    val weatherCurrentService: WeatherCurrentService =
-                        WeatherRetrofitClient.retrofitInstance.create(WeatherCurrentService::class.java)
-
-                    val weatherTodayViewModel =
-                        WeatherTodayViewModel(weatherTodayService = weatherTodayService)
-                    val weatherCurrentViewModel =
-                        WeatherCurrentViewModel(weatherCurrentService = weatherCurrentService)
-                    val weatherNextDaysViewModel =
-                        WeatherNextDaysViewModel(weatherNextDaysService = weatherNextDaysService)
-
                     WeatherCurrentScreen(
                         weatherCurrentViewModel = weatherCurrentViewModel,
                         weatherTodayViewModel = weatherTodayViewModel,

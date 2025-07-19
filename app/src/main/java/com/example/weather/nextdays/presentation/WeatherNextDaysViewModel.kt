@@ -2,7 +2,10 @@ package com.example.weather.nextdays.presentation
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.weather.common.convertWeatherNextDaysDTOToListDailyWeather
+import com.example.weather.common.data.remote.WeatherRetrofitClient
 import com.example.weather.nextdays.data.model.WeatherNextDaysDTO
 import com.example.weather.nextdays.data.remote.WeatherNextDaysService
 import com.example.weather.nextdays.presentation.ui.WeatherNextDaysUiState
@@ -14,7 +17,7 @@ import retrofit2.Response
 
 
 class WeatherNextDaysViewModel(
-    weatherNextDaysService: WeatherNextDaysService
+    private val weatherNextDaysService: WeatherNextDaysService
 ) : ViewModel() {
 
     private val _uiWeatherNextDaysUiState = MutableStateFlow<WeatherNextDaysUiState>(
@@ -72,6 +75,13 @@ class WeatherNextDaysViewModel(
 
 
     companion object {
-
+        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+                val weatherNextDaysService =
+                    WeatherRetrofitClient.retrofitInstance.create(WeatherNextDaysService::class.java)
+                return WeatherNextDaysViewModel(weatherNextDaysService = weatherNextDaysService) as T
+            }
+        }
     }
 }

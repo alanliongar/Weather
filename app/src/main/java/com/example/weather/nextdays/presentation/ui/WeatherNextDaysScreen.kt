@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
@@ -24,31 +26,40 @@ import androidx.compose.ui.unit.sp
 import com.example.weather.common.getBarColor
 import com.example.weather.common.getBarSize
 import com.example.weather.common.getWeatherEmoji
-import com.example.weather.nextdays.data.model.DailyWeather
 import com.example.weather.nextdays.data.model.WeatherNextDaysDTO
+import com.example.weather.nextdays.presentation.WeatherNextDaysViewModel
 
 
 @Composable
-fun WeatherRowScreen(
+fun WeatherNextDaysRowsScreen(
     modifier: Modifier = Modifier,
-    newDailyWeather: List<DailyWeather>
+    weatherNextDaysViewModel: WeatherNextDaysViewModel,
 ) {
-    WeatherRowContent(newDailyWeather = newDailyWeather)
+    val weatherNextDaysUiState by weatherNextDaysViewModel.uiWeatherNextDaysUiState.collectAsState()
+    WeatherNextDaysRowsContent(
+        weatherNextDaysUiState = weatherNextDaysUiState
+    )
 }
 
 @Composable
-private fun WeatherRowContent(
+private fun WeatherNextDaysRowsContent(
     modifier: Modifier = Modifier,
-    newDailyWeather: List<DailyWeather>
+    weatherNextDaysUiState: WeatherNextDaysUiState
 ) {
-    LazyColumn() {
-        items(newDailyWeather) { forecast ->
-            WeatherRow(
-                temperatureMax = forecast.temperatureMax,
-                temperatureMin = forecast.temperatureMin,
-                weatherCode = forecast.weatherCode,
-                time = forecast.time
-            )
+    if (weatherNextDaysUiState.isLoading) {
+        Text("Loading....")
+    } else if (weatherNextDaysUiState.isError) {
+        Text(weatherNextDaysUiState.errorMessage)
+    } else {
+        LazyColumn() {
+            items(weatherNextDaysUiState.nextDays) { forecast ->
+                WeatherRow(
+                    temperatureMax = forecast.temperatureMax,
+                    temperatureMin = forecast.temperatureMin,
+                    weatherCode = forecast.weatherCode,
+                    time = forecast.time
+                )
+            }
         }
     }
 }
@@ -56,11 +67,11 @@ private fun WeatherRowContent(
 
 @Composable
 private fun WeatherRow(
-    modifier: Modifier = Modifier.fillMaxWidth(),
+    modifier: Modifier = Modifier,
     temperatureMin: Int, temperatureMax: Int, weatherCode: Int, time: String
 ) {
     Row(
-        modifier = modifier.padding(top = 24.dp, start = 10.dp),
+        modifier = modifier.padding(top = 24.dp, start = 10.dp).fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -81,7 +92,6 @@ private fun WeatherRow(
                 modifier = modifier,
                 temperatureMin = temperatureMin,
                 temperatureMax = temperatureMax,
-                totalWidth = 126
             )
             Spacer(modifier = Modifier.size(8.dp))
             Text(
@@ -100,8 +110,8 @@ private fun TempBar(
     modifier: Modifier = Modifier,
     temperatureMin: Int,
     temperatureMax: Int,
-    totalWidth: Int,
 ) {
+    val totalWidth = 126
     val color = getBarColor((temperatureMax + temperatureMin) / 2)
     val backgroundColor = MaterialTheme.colorScheme.background
     val boxes: Pair<Float, Float>

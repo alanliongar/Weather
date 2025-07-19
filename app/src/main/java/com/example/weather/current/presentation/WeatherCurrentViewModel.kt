@@ -2,6 +2,9 @@ package com.example.weather.current.presentation
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.CreationExtras
+import com.example.weather.common.data.remote.WeatherRetrofitClient
 import com.example.weather.current.data.model.CurrentWeatherUiData
 import com.example.weather.current.data.remote.WeatherCurrentService
 import com.example.weather.current.presentation.ui.CurrentWeatherUiState
@@ -25,9 +28,6 @@ class WeatherCurrentViewModel(
 
     private val _uiCurrentWeather = MutableStateFlow<CurrentWeatherUiState>(CurrentWeatherUiState())
     val uiCurrentWeather: StateFlow<CurrentWeatherUiState> = _uiCurrentWeather
-
-
-
 
     init {
         _uiCurrentWeather.value = _uiCurrentWeather.value.copy(
@@ -60,7 +60,6 @@ class WeatherCurrentViewModel(
                             isError = false,
                             errorMessage = "No error message"
                         )
-                        /*newHourlyMap = convertWeatherTodayDTOToListHourlyWeather(weather, selectedDay)*/
                     } else {
                         Log.d("WeatherCurrentViewModel", "Request Error :: Empty response")
                         _uiCurrentWeather.value =
@@ -91,6 +90,13 @@ class WeatherCurrentViewModel(
 
 
     companion object {
-
+        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+                val weatherCurrentService =
+                    WeatherRetrofitClient.retrofitInstance.create(WeatherCurrentService::class.java)
+                return WeatherCurrentViewModel(weatherCurrentService = weatherCurrentService) as T
+            }
+        }
     }
 }
