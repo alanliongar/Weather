@@ -48,7 +48,7 @@ fun WeatherCurrentScreen(
 
     LaunchedEffect(selectedDay) {
         if (selectedDay < 7) {
-            weatherTodayViewModel.updateUiWeatherToday(selectedDay)
+            weatherTodayViewModel.fetchWeatherTodayData(selectedDay)
         }
     }
 

@@ -26,9 +26,9 @@ import org.maplibre.android.WellKnownTileServer
 const val apiKey = BuildConfig.API_KEY
 
 class MainActivity : ComponentActivity() {
-    val weatherTodayViewModel by viewModels<WeatherTodayViewModel> { WeatherTodayViewModel.Factory }
-    val weatherCurrentViewModel by viewModels<WeatherCurrentViewModel> { WeatherCurrentViewModel.Factory }
-    val weatherNextDaysViewModel by viewModels<WeatherNextDaysViewModel> { WeatherNextDaysViewModel.Factory }
+    private val weatherTodayViewModel by viewModels<WeatherTodayViewModel> { WeatherTodayViewModel.Factory }
+    private val weatherCurrentViewModel by viewModels<WeatherCurrentViewModel> { WeatherCurrentViewModel.Factory }
+    private val weatherNextDaysViewModel by viewModels<WeatherNextDaysViewModel> { WeatherNextDaysViewModel.Factory }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -27,6 +27,10 @@ class WeatherNextDaysViewModel(
     val uiWeatherNextDaysUiState: StateFlow<WeatherNextDaysUiState> = _uiWeatherNextDaysUiState
 
     init {
+        fetchWeatherNextDaysData()
+    }
+
+    private fun fetchWeatherNextDaysData() {
         _uiWeatherNextDaysUiState.value = _uiWeatherNextDaysUiState.value.copy(isLoading = true)
         val callWeatherNextDaysService = weatherNextDaysService.getNextDaysWeather(-23.78f, -46.69f)
         callWeatherNextDaysService.enqueue(object : Callback<WeatherNextDaysDTO> {
