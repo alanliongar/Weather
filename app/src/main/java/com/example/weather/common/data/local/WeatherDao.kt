@@ -4,6 +4,8 @@ import androidx.room.Dao
 
 @Dao
 interface WeatherDao {
+    suspend fun insertWeatherData(){
 
+    }
 
 }
