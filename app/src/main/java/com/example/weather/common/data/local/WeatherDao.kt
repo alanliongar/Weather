@@ -7,5 +7,4 @@ interface WeatherDao {
     suspend fun insertWeatherData(){
 
     }
-//oi
 }
