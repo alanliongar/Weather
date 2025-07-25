@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.weather.common.convertWeatherHourlyFromDTOToListHourlyWeather
 import com.example.weather.common.data.remote.WeatherRetrofitClient
-import com.example.weather.today.WeatherTodayRepository
+import com.example.weather.today.data.WeatherTodayRepository
 import com.example.weather.today.data.remote.WeatherTodayService
 import com.example.weather.today.presentation.ui.WeatherTodayUiState
 import kotlinx.coroutines.Dispatchers

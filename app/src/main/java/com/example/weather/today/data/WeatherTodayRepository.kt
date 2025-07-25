@@ -1,4 +1,4 @@
-package com.example.weather.today
+package com.example.weather.today.data
 
 import com.example.weather.today.data.model.WeatherTodayDTO
 import com.example.weather.today.data.remote.WeatherTodayService

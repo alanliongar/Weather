@@ -33,7 +33,7 @@ import com.example.weather.common.data.remote.WeatherRetrofitClient
 import com.example.weather.current.data.model.CurrentWeatherUiData
 import com.example.weather.current.presentation.WeatherCurrentViewModel
 import com.example.weather.nextdays.presentation.WeatherNextDaysViewModel
-import com.example.weather.today.WeatherTodayRepository
+import com.example.weather.today.data.WeatherTodayRepository
 import com.example.weather.today.data.remote.WeatherTodayService
 import com.example.weather.today.presentation.WeatherTodayViewModel
 import com.example.weather.ui.theme.WeatherTheme

@@ -2,6 +2,7 @@ package com.example.weather.common.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 
 @Entity
 data class WeatherEntity(
@@ -9,6 +10,7 @@ data class WeatherEntity(
     val current: Current,
     val hourly: Hourly,
 ) {
+    @Serializable
     data class Current(
         val time: String,
         val temperature: Float,
@@ -17,7 +19,7 @@ data class WeatherEntity(
         val wind: Float,
         val weather: Int,
     )
-
+    @Serializable
     data class Hourly(
         val time: List<String>,
         val temperature: List<Float>,
