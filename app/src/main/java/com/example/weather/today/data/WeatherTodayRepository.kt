@@ -1,6 +1,7 @@
 package com.example.weather.today.data
 
 import com.example.weather.today.data.local.WeatherTodayLocalDataSource
+import com.example.weather.today.data.model.Weather
 import com.example.weather.today.data.model.WeatherTodayDTO
 import com.example.weather.today.data.remote.WeatherTodayRemoteDataSource
 
@@ -13,7 +14,7 @@ class WeatherTodayRepository(
         latitude: Float,
         longitude: Float,
         forecastDays: Int = 2
-    ): Result<WeatherTodayDTO?> {
+    ): Result<Weather?> {
         return remote.getWeatherToday(
             latitude = latitude,
             longitude = longitude,

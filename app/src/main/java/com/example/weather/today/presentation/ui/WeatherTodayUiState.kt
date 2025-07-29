@@ -1,6 +1,6 @@
 package com.example.weather.today.presentation.ui
 
-import com.example.weather.common.data.model.HourlyWeatherUiData
+import com.example.weather.today.data.model.HourlyWeatherUiData
 
 data class WeatherTodayUiState(
     var hourlyWeather: List<HourlyWeatherUiData> = emptyList(),

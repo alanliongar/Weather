@@ -2,10 +2,11 @@ package com.example.weather.common
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import com.example.weather.common.data.model.HourlyWeatherUiData
+import com.example.weather.today.data.model.HourlyWeatherUiData
 import com.example.weather.current.data.model.CurrentWeatherUiData
 import com.example.weather.nextdays.data.model.DailyWeather
 import com.example.weather.nextdays.data.model.WeatherNextDaysDTO
+import com.example.weather.today.data.model.Weather
 import com.example.weather.today.data.model.WeatherTodayDTO
 import java.util.*
 import java.time.*
@@ -126,7 +127,7 @@ fun getWeatherDescription(weatherCode: Int): String {
 
 
 fun convertWeatherHourlyFromDTOToListHourlyWeather(
-    weatherHourly: WeatherTodayDTO.Hourly, days: Int = 1
+    weatherHourly: Weather.Hourly, days: Int = 1
 ): List<HourlyWeatherUiData> {
     val zoneId = ZoneId.of("America/Sao_Paulo")
     val now = ZonedDateTime.now(zoneId).toLocalDateTime()
