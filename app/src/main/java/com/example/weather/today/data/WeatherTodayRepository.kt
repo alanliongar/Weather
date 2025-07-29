@@ -1,35 +1,11 @@
 package com.example.weather.today.data
 
-import com.example.weather.today.data.model.WeatherTodayDTO
-import com.example.weather.today.data.remote.WeatherTodayService
+import com.example.weather.today.data.local.WeatherTodayLocalDataSource
+import com.example.weather.today.data.remote.WeatherTodayRemoteDataSource
 
 class WeatherTodayRepository(
-    private val weatherTodayService: WeatherTodayService
+    private val local: WeatherTodayLocalDataSource,
+    private val remote: WeatherTodayRemoteDataSource
 ) {
-    suspend fun getWeatherToday(
-        latitude: Float,
-        longitude: Float,
-        forecastDays: Int = 2
-    ): Result<WeatherTodayDTO?> {
-        return try {
-            val result =
-                weatherTodayService.getTodayWeather(
-                    latitude = latitude,
-                    longitude = longitude,
-                    forecastDays = forecastDays
-                )
-            if (result.isSuccessful) {
-                val remoteWeatherToday = result.body()
-                if (remoteWeatherToday != null) {
-                    Result.success(remoteWeatherToday)
-                } else {
-                    Result.failure(Exception("Empty result from server"))
-                }
-            } else {
-                Result.failure(Exception(result.errorBody().toString()))
-            }
-        } catch (ex: Exception) {
-            Result.failure(ex)
-        }
-    }
+
 }

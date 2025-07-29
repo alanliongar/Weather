@@ -4,8 +4,10 @@ import android.util.Log
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.example.weather.WeatherApplication
 import com.example.weather.common.convertWeatherHourlyFromDTOToListHourlyWeather
 import com.example.weather.common.data.remote.WeatherRetrofitClient
 import com.example.weather.today.data.WeatherTodayRepository
@@ -67,11 +69,8 @@ class WeatherTodayViewModel(
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-                val weatherTodayService =
-                    WeatherRetrofitClient.retrofitInstance.create(WeatherTodayService::class.java)
-                val weatherTodayRepository: WeatherTodayRepository =
-                    WeatherTodayRepository(weatherTodayService)
-                return WeatherTodayViewModel(weatherTodayRepository) as T
+                val application = checkNotNull(extras[APPLICATION_KEY])
+                return WeatherTodayViewModel(weatherTodayRepository = (application as WeatherApplication).repository) as T
             }
         }
     }
