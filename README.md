@@ -2,6 +2,13 @@
 
 Weather is an Android application developed to demonstrate clean architecture, modern UI, and offline-first principles. The app displays current weather and hourly forecast, with support for dark/light themes and local caching via Room. It follows the MVVM architecture and integrates remote and local data sources using best practices.
 
+## 📸 Screenshots
+
+<p float="left"> 
+  <img src="https://github.com/alanliongar/Weather/blob/master/screenshots/Screenshot_01.png" width="250" /> 
+  <img src="https://github.com/alanliongar/Weather/blob/master/screenshots/Screenshot_02.png" width="250" /> 
+</p>
+
 ## ✨ Features
 
 - 🌤️ **Current & Hourly Forecast**: View current temperature, weather condition, humidity, rain, and wind.
@@ -30,10 +37,6 @@ Weather is an Android application developed to demonstrate clean architecture, m
 - Android Studio Hedgehog or later
 - JDK 21
 - Minimum SDK: 21
-
-## 📸 Screenshots
-
-*(Add your screenshots here if needed)*
 
 ## 🔐 License
 
