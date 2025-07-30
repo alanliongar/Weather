@@ -6,7 +6,6 @@ Weather is an Android application developed to demonstrate clean architecture, m
 
 - 🌤️ **Current & Hourly Forecast**: View current temperature, weather condition, humidity, rain, and wind.
 - 📦 **Offline Caching**: Data is cached locally using Room for offline access.
-- 🎨 **Theme Support**: Full support for light and dark mode.
 - 🧭 **Location-based Forecast**: Weather data is fetched dynamically based on latitude and longitude.
 - 🔄 **Safe API Handling**: Graceful fallback to local cache if remote API fails.
 - 🧱 **Modular Architecture**: Clear separation of concerns with ViewModel, Repository, and Data Sources.
@@ -16,18 +15,15 @@ Weather is an Android application developed to demonstrate clean architecture, m
 - 100% Kotlin
 - Jetpack Compose
   - Column, Row, Spacer, Modifier
-  - LazyColumn
-  - TextField
-  - FloatingActionButton
-  - Navigation with NavHostController
+  - LazyColumn, LazyRow
 - Room Database (for offline cache)
 - Retrofit (for API integration)
 - MVVM Architecture
 - Repository Pattern (offline-first)
 - Coroutines
-- Unit Tests:
-  - JUnit
-  - Mockito-Kotlin
+- API meteo (open api)
+- MapLibre (Library)
+- OpenMapStreet (data)
 
 ## ⚠️ Requirements
 
