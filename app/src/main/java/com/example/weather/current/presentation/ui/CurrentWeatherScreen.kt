@@ -16,34 +16,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.room.Room
 import com.example.weather.nextdays.presentation.ui.WeatherNextDaysRowsScreen
-import com.example.weather.today.data.model.WeatherTodayDTO
 import com.example.weather.today.presentation.ui.WeatherTodayScreen
 import com.example.weather.apiKey
-import com.example.weather.common.data.local.WeatherDao
-import com.example.weather.common.data.local.WeatherDataBase
 import com.example.weather.common.presentation.ui.MapLibreMapView
 import com.example.weather.common.formatToFullDate
 import com.example.weather.common.getWeatherDescription
 import com.example.weather.common.getWeatherEmoji
-import com.example.weather.common.data.remote.WeatherRetrofitClient
 import com.example.weather.current.data.model.CurrentWeatherUiData
 import com.example.weather.current.presentation.WeatherCurrentViewModel
 import com.example.weather.nextdays.presentation.WeatherNextDaysViewModel
-import com.example.weather.today.data.WeatherTodayRepository
-import com.example.weather.today.data.local.WeatherTodayLocalDataSource
-import com.example.weather.today.data.remote.WeatherTodayRemoteDataSource
-import com.example.weather.today.data.remote.WeatherTodayService
 import com.example.weather.today.presentation.WeatherTodayViewModel
-import com.example.weather.ui.theme.WeatherTheme
 
 @Composable
 fun CurrentWeatherScreen(

@@ -15,6 +15,6 @@ interface WeatherTodayService {
         @Query("forecast_days") forecastDays: Int = 2,
         @Query("current") current: String = "temperature_2m,relative_humidity_2m,rain,wind_speed_10m,weather_code",
         @Query("hourly") hourly: String = "temperature_2m,weather_code",
-    ): Response<WeatherTodayDTO>
+    ): Response<WeatherTodayDTO?>
 }
 //https://api.open-meteo.com/v1/forecast?latitude=-23.78&longitude=-46.69&hourly=temperature_2m,weather_code&current=temperature_2m,relative_humidity_2m,rain,wind_speed_10m,weather_code&forecast_days=1&timezone=GMT-3

@@ -2,11 +2,9 @@ package com.example.weather.common
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import com.example.weather.today.data.model.HourlyWeatherUiData
 import com.example.weather.current.data.model.CurrentWeatherUiData
 import com.example.weather.nextdays.data.model.DailyWeather
 import com.example.weather.nextdays.data.model.WeatherNextDaysDTO
-import com.example.weather.today.data.model.Weather
 import com.example.weather.today.data.model.WeatherTodayDTO
 import java.util.*
 import java.time.*
@@ -123,46 +121,6 @@ fun getWeatherDescription(weatherCode: Int): String {
         96, 99 -> "Thunderstorm"
         else -> "Unknown"
     }
-}
-
-
-fun convertWeatherHourlyFromDTOToListHourlyWeather(
-    weatherHourly: Weather.Hourly, days: Int = 1
-): List<HourlyWeatherUiData> {
-    val zoneId = ZoneId.of("America/Sao_Paulo")
-    val now = ZonedDateTime.now(zoneId).toLocalDateTime()
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
-    val formattedDate = now.format(formatter)
-    val hourlyMap: List<HourlyWeatherUiData>
-    if (days == 1) {
-        hourlyMap = weatherHourly.time.indices.mapNotNull { index ->
-            if (getHour(weatherHourly.time[index]) >= getHour(formattedDate) && getDay(
-                    weatherHourly.time[index]
-                ) == getDay(formattedDate)
-            ) {
-                HourlyWeatherUiData(
-                    time = weatherHourly.time[index],
-                    temperature = weatherHourly.temperature[index],
-                    weatherCode = weatherHourly.weatherCode[index]
-                )
-            } else {
-                null
-            }
-        }
-    } else {
-        hourlyMap = weatherHourly.time.indices.mapNotNull { index ->
-            if (getDay(weatherHourly.time[index]) == getDay(formattedDate) + days - 1) {
-                HourlyWeatherUiData(
-                    time = weatherHourly.time[index],
-                    temperature = weatherHourly.temperature[index],
-                    weatherCode = weatherHourly.weatherCode[index]
-                )
-            } else {
-                null
-            }
-        }
-    }
-    return hourlyMap
 }
 
 fun convertWeatherNextDaysDTOToListDailyWeather(

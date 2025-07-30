@@ -8,15 +8,19 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.weather.WeatherApplication
-import com.example.weather.common.convertWeatherHourlyFromDTOToListHourlyWeather
-import com.example.weather.common.data.remote.WeatherRetrofitClient
+import com.example.weather.common.getDay
+import com.example.weather.common.getHour
 import com.example.weather.today.data.WeatherTodayRepository
-import com.example.weather.today.data.remote.WeatherTodayService
+import com.example.weather.today.data.model.HourlyWeatherUiData
+import com.example.weather.today.data.model.Weather
 import com.example.weather.today.presentation.ui.WeatherTodayUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 
 class WeatherTodayViewModel(
@@ -40,8 +44,9 @@ class WeatherTodayViewModel(
                 if (result.getOrNull() != null) {
                     val weatherToday = result.getOrNull()!!
                     _uiWeatherToday.value = WeatherTodayUiState(
-                        hourlyWeather = convertWeatherHourlyFromDTOToListHourlyWeather(
-                            weatherToday.hourly, days = selectedDay
+                        hourlyWeather = getWeatherUiToday(
+                            weather = weatherToday,
+                            days = selectedDay
                         ), isLoading = false, isError = false, errorMessage = ""
                     )
                 } else {
@@ -63,6 +68,44 @@ class WeatherTodayViewModel(
                 )
             }
         }
+    }
+
+    private fun getWeatherUiToday(weather: Weather, days: Int = 1): List<HourlyWeatherUiData> {
+        val weatherHourly = weather.hourly
+        val zoneId = ZoneId.of("America/Sao_Paulo")
+        val now = ZonedDateTime.now(zoneId).toLocalDateTime()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+        val formattedDate = now.format(formatter)
+        val hourlyMap: List<HourlyWeatherUiData>
+        if (days == 1) {
+            hourlyMap = weatherHourly.time.indices.mapNotNull { index ->
+                if (getHour(weatherHourly.time[index]) >= getHour(formattedDate) && getDay(
+                        weatherHourly.time[index]
+                    ) == getDay(formattedDate)
+                ) {
+                    HourlyWeatherUiData(
+                        time = weatherHourly.time[index],
+                        temperature = weatherHourly.temperature[index],
+                        weatherCode = weatherHourly.weatherCode[index]
+                    )
+                } else {
+                    null
+                }
+            }
+        } else {
+            hourlyMap = weatherHourly.time.indices.mapNotNull { index ->
+                if (getDay(weatherHourly.time[index]) == getDay(formattedDate) + days - 1) {
+                    HourlyWeatherUiData(
+                        time = weatherHourly.time[index],
+                        temperature = weatherHourly.temperature[index],
+                        weatherCode = weatherHourly.weatherCode[index]
+                    )
+                } else {
+                    null
+                }
+            }
+        }
+        return hourlyMap
     }
 
     companion object {

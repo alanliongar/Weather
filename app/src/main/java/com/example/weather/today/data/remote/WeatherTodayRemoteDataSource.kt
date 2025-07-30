@@ -11,7 +11,7 @@ class WeatherTodayRemoteDataSource(
         latitude: Float,
         longitude: Float,
         forecastDays: Int = 2
-    ): Result<Weather?> {
+    ): Result<Weather> {
         return try {
             val result =
                 weatherTodayService.getTodayWeather(
@@ -33,13 +33,15 @@ class WeatherTodayRemoteDataSource(
                     val weatherHourly = Weather.Hourly(
                         time = remoteWeatherToday.hourly.time,
                         temperature = remoteWeatherToday.hourly.temperature,
-                        weatherCode = remoteWeatherToday.hourly.weatherCode)
+                        weatherCode = remoteWeatherToday.hourly.weatherCode
+                    )
 
                     val weather = Weather(
                         current = weatherCurrent, hourly = weatherHourly
                     )
 
                     Result.success(weather)
+
                 } else {
                     Result.failure(Exception("Empty result from server"))
                 }

@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 
 @Entity
 data class WeatherEntity(
-    @PrimaryKey val id: Int,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int,
     val current: Current,
     val hourly: Hourly,
 ) {

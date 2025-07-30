@@ -12,7 +12,7 @@ interface WeatherDao {
     suspend fun insertWeather(weatherEntity: WeatherEntity)
 
     @Query("Select * From weatherentity")
-    suspend fun getTodayWeather(): WeatherEntity
+    suspend fun getTodayWeather(): WeatherEntity?
 
     @Query("DELETE FROM weatherentity")
     suspend fun deleteAll()
